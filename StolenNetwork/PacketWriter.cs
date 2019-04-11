@@ -123,6 +123,9 @@ namespace StolenNetwork
             }
         }
 
+	    public virtual void Dispose()
+	    { }
+
         #endregion
 
         #region Protected Methods

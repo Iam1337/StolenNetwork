@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace StolenNetwork
 {
@@ -75,8 +74,6 @@ namespace StolenNetwork
         #region Protected Methods
 
         // CONNECTIONS
-        protected abstract void CreateConnection();
-
         protected void ConnectionDisconnect(Connection connection, string reason)
         {
             if (connection == null)

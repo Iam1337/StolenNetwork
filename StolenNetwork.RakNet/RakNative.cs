@@ -419,89 +419,92 @@ namespace StolenNetwork.RakNet
 
     }
 
-    /// <summary>
-    /// These enumerations are used to describe when packets are delivered.
-    /// </summary>
-    public enum PacketPriority
-    {
-        /// <summary>
-        /// The highest possible priority. These message trigger sends immediately, and are generally not buffered or aggregated into a single datagram.
-        /// </summary>
-        Immediate,
+	/*
+/// <summary>
+/// These enumerations are used to describe when packets are delivered.
+/// </summary>
+public enum PacketPriority
+{
+	/// <summary>
+	/// The highest possible priority. These message trigger sends immediately, and are generally not buffered or aggregated into a single datagram.
+	/// </summary>
+	Immediate,
 
-        /// <summary>
-        /// For every 2 IMMEDIATE_PRIORITY messages, 1 HIGH_PRIORITY will be sent.
-        /// Messages at this priority and lower are buffered to be sent in groups at 10 millisecond intervals to reduce UDP overhead and better measure congestion control.
-        /// </summary>
-        High,
+	/// <summary>
+	/// For every 2 IMMEDIATE_PRIORITY messages, 1 HIGH_PRIORITY will be sent.
+	/// Messages at this priority and lower are buffered to be sent in groups at 10 millisecond intervals to reduce UDP overhead and better measure congestion control.
+	/// </summary>
+	High,
 
-        /// <summary>
-        /// For every 2 HIGH_PRIORITY messages, 1 MEDIUM_PRIORITY will be sent.
-        /// Messages at this priority and lower are buffered to be sent in groups at 10 millisecond intervals to reduce UDP overhead and better measure congestion control.
-        /// </summary>
-        Medium,
+	/// <summary>
+	/// For every 2 HIGH_PRIORITY messages, 1 MEDIUM_PRIORITY will be sent.
+	/// Messages at this priority and lower are buffered to be sent in groups at 10 millisecond intervals to reduce UDP overhead and better measure congestion control.
+	/// </summary>
+	Medium,
 
-        /// <summary>
-        /// For every 2 MEDIUM_PRIORITY messages, 1 LOW_PRIORITY will be sent.
-        /// Messages at this priority and lower are buffered to be sent in groups at 10 millisecond intervals to reduce UDP overhead and better measure congestion control.
-        /// </summary>
-        Low,
+	/// <summary>
+	/// For every 2 MEDIUM_PRIORITY messages, 1 LOW_PRIORITY will be sent.
+	/// Messages at this priority and lower are buffered to be sent in groups at 10 millisecond intervals to reduce UDP overhead and better measure congestion control.
+	/// </summary>
+	Low,
 
-        /// Internal
-        NUMBER_OF_PRIORITIES
-    }
+	/// Internal
+	NUMBER_OF_PRIORITIES
+}
 
-    /// <summary>
-    /// These enumerations are used to describe how packets are delivered.
-    /// </summary>
-    public enum PacketReliability
-    {
-        /// <summary>
-        /// Same as regular UDP, except that it will also discard duplicate datagrams.  RakNet adds (6 to 17) + 21 bits of overhead, 16 of which is used to detect duplicate packets and 6 to 17 of which is used for message length.
-        /// </summary>
-        Unreliable,
 
-        /// <summary>
-        /// Regular UDP with a sequence counter.  Out of order messages will be discarded.
-        /// Sequenced and ordered messages sent on the same channel will arrive in the order sent.
-        /// </summary>
-        UnreliableSequenced,
+/// <summary>
+/// These enumerations are used to describe how packets are delivered.
+/// </summary>
+public enum PacketReliability
+{
+	/// <summary>
+	/// Same as regular UDP, except that it will also discard duplicate datagrams.  RakNet adds (6 to 17) + 21 bits of overhead, 16 of which is used to detect duplicate packets and 6 to 17 of which is used for message length.
+	/// </summary>
+	Unreliable,
 
-        /// <summary>
-        /// The message is sent reliably, but not necessarily in any order.  Same overhead as UNRELIABLE.
-        /// </summary>
-        Reliable,
+	/// <summary>
+	/// Regular UDP with a sequence counter.  Out of order messages will be discarded.
+	/// Sequenced and ordered messages sent on the same channel will arrive in the order sent.
+	/// </summary>
+	UnreliableSequenced,
 
-        /// <summary>
-        /// This message is reliable and will arrive in the order you sent it.  Messages will be delayed while waiting for out of order messages.  Same overhead as UNRELIABLE_SEQUENCED.
-        /// Sequenced and ordered messages sent on the same channel will arrive in the order sent.
-        /// </summary>
-        ReliableOrdered,
+	/// <summary>
+	/// The message is sent reliably, but not necessarily in any order.  Same overhead as UNRELIABLE.
+	/// </summary>
+	Reliable,
 
-        /// <summary>
-        /// This message is reliable and will arrive in the sequence you sent it.  Out or order messages will be dropped.  Same overhead as UNRELIABLE_SEQUENCED.
-        /// Sequenced and ordered messages sent on the same channel will arrive in the order sent.
-        /// </summary>
-        ReliableSequenced,
+	/// <summary>
+	/// This message is reliable and will arrive in the order you sent it.  Messages will be delayed while waiting for out of order messages.  Same overhead as UNRELIABLE_SEQUENCED.
+	/// Sequenced and ordered messages sent on the same channel will arrive in the order sent.
+	/// </summary>
+	ReliableOrdered,
 
-        /// <summary>
-        /// Same as UNRELIABLE, however the user will get either ID_SND_RECEIPT_ACKED or ID_SND_RECEIPT_LOSS based on the result of sending this message when calling RakPeerInterface::Receive(). Bytes 1-4 will contain the number returned from the Send() function. On disconnect or shutdown, all messages not previously acked should be considered lost. 
-        /// </summary>
-        UnreliableWithAckReceipt,
+	/// <summary>
+	/// This message is reliable and will arrive in the sequence you sent it.  Out or order messages will be dropped.  Same overhead as UNRELIABLE_SEQUENCED.
+	/// Sequenced and ordered messages sent on the same channel will arrive in the order sent.
+	/// </summary>
+	ReliableSequenced,
 
-        /// <summary>
-        /// Same as RELIABLE. The user will also get ID_SND_RECEIPT_ACKED after the message is delivered when calling RakPeerInterface::Receive(). ID_SND_RECEIPT_ACKED is returned when the message arrives, not necessarily the order when it was sent. Bytes 1-4 will contain the number returned from the Send() function. On disconnect or shutdown, all messages not previously acked should be considered lost. This does not return ID_SND_RECEIPT_LOSS.
-        /// </summary>
-        ReliableWithAckReceipt,
+	/// <summary>
+	/// Same as UNRELIABLE, however the user will get either ID_SND_RECEIPT_ACKED or ID_SND_RECEIPT_LOSS based on the result of sending this message when calling RakPeerInterface::Receive(). Bytes 1-4 will contain the number returned from the Send() function. On disconnect or shutdown, all messages not previously acked should be considered lost. 
+	/// </summary>
+	UnreliableWithAckReceipt,
 
-        /// <summary>
-        /// Same as RELIABLE_ORDERED_ACK_RECEIPT. The user will also get ID_SND_RECEIPT_ACKED after the message is delivered when calling RakPeerInterface::Receive(). ID_SND_RECEIPT_ACKED is returned when the message arrives, not necessarily the order when it was sent. Bytes 1-4 will contain the number returned from the Send() function. On disconnect or shutdown, all messages not previously acked should be considered lost. This does not return ID_SND_RECEIPT_LOSS.
-        /// </summary>
-        ReliableOrderedWithAckReceipt,
+	/// <summary>
+	/// Same as RELIABLE. The user will also get ID_SND_RECEIPT_ACKED after the message is delivered when calling RakPeerInterface::Receive(). ID_SND_RECEIPT_ACKED is returned when the message arrives, not necessarily the order when it was sent. Bytes 1-4 will contain the number returned from the Send() function. On disconnect or shutdown, all messages not previously acked should be considered lost. This does not return ID_SND_RECEIPT_LOSS.
+	/// </summary>
+	ReliableWithAckReceipt,
 
-        /// Internal
-        NUMBER_OF_RELIABILITIES
-    }
+	/// <summary>
+	/// Same as RELIABLE_ORDERED_ACK_RECEIPT. The user will also get ID_SND_RECEIPT_ACKED after the message is delivered when calling RakPeerInterface::Receive(). ID_SND_RECEIPT_ACKED is returned when the message arrives, not necessarily the order when it was sent. Bytes 1-4 will contain the number returned from the Send() function. On disconnect or shutdown, all messages not previously acked should be considered lost. This does not return ID_SND_RECEIPT_LOSS.
+	/// </summary>
+	ReliableOrderedWithAckReceipt,
+
+	/// Internal
+	NUMBER_OF_RELIABILITIES
+}
+*/
 
     #endregion
 
@@ -604,12 +607,12 @@ namespace StolenNetwork.RakNet
         /// <summary>
         /// For each priority level, how many messages are waiting to be sent out?
         /// </summary>
-        public unsafe fixed uint MessageInSendBuffer[(int)PacketPriority.NUMBER_OF_PRIORITIES];
+        public unsafe fixed uint MessageInSendBuffer[4];
 
         /// <summary>
         /// For each priority level, how many bytes are waiting to be sent out?
         /// </summary>
-        public unsafe fixed double BytesInSendBuffer[(int)PacketPriority.NUMBER_OF_PRIORITIES];
+        public unsafe fixed double BytesInSendBuffer[4];
 
         /// <summary>
         /// How many messages are waiting in the resend buffer? This includes messages waiting for an ack, so should normally be a small value

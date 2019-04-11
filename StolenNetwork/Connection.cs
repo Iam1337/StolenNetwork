@@ -15,7 +15,7 @@ namespace StolenNetwork
 
         public ulong Guid;
 
-        public string Ip;
+        public string Address;
 
         public uint Port;
 
@@ -40,7 +40,7 @@ namespace StolenNetwork
 
         public override string ToString()
         {
-            return $"{Guid}/{Ip}:{Port}/{State}";
+            return $"{Guid}/{Address}:{Port}/{State}";
         }
 
         #endregion

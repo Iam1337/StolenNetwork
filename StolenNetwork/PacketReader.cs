@@ -1,9 +1,10 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text;
 
 namespace StolenNetwork
 {
-    public abstract class PacketReader
+    public abstract class PacketReader : IDisposable
     {
         #region Static Private Vars
 
@@ -91,6 +92,9 @@ namespace StolenNetwork
 
             return Encoding.UTF8.GetString(memoryStream.GetBuffer(), 0, (int)memoryStream.Length);
         }
+
+	    public virtual void Dispose()
+	    { }
 
         #endregion
 
