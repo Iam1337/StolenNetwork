@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 
 using StolenNetwork.Converters;
 
@@ -7,33 +6,34 @@ namespace StolenNetwork.RakNet
 {
 	public class RakPacketReader : PacketReader
 	{
-        #region Public Vars
+		#region Public Vars
 
 		public override long Length => _stream.Length;
 
-		public override long Position {
+		public override long Position
+		{
 			get => _stream.Position;
 			set => _stream.Position = value;
 		}
-		
-        #endregion
 
-        #region Private Vars
+		#endregion
 
-        private RakPeer _peer;
+		#region Private Vars
+
+		private RakPeer _peer;
 
 		private MemoryStream _stream;
 
-        #endregion
+		#endregion
 
-        #region Public Methods
+		#region Public Methods
 
-        public RakPacketReader(RakPeer peer, Network network) : base(network)
-        {
-	        _peer = peer;
+		public RakPacketReader(RakPeer peer, Network network) : base(network)
+		{
+			_peer = peer;
 			_stream = new MemoryStream();
-        }
-		
+		}
+
 		public override bool Start()
 		{
 			if (_peer == null)
@@ -45,7 +45,7 @@ namespace StolenNetwork.RakNet
 			_peer.ReadPacket(_stream);
 
 			return true;
-        }
+		}
 
 		public override byte PacketId()
 		{
@@ -54,12 +54,12 @@ namespace StolenNetwork.RakNet
 
 		public override byte UInt8()
 		{
-			return Unread >= Block8.Size ? Read8().Unsigned : (byte)0;
+			return Unread >= Block8.Size ? Read8().Unsigned : (byte) 0;
 		}
 
 		public override ushort UInt16()
 		{
-			return Unread >= Block16.Size ? Read16().Unsigned : (ushort)0;
+			return Unread >= Block16.Size ? Read16().Unsigned : (ushort) 0;
 		}
 
 		public override uint UInt32()
@@ -74,12 +74,12 @@ namespace StolenNetwork.RakNet
 
 		public override sbyte Int8()
 		{
-			return Unread >= Block8.Size ? Read8().Signed : (sbyte)0;
+			return Unread >= Block8.Size ? Read8().Signed : (sbyte) 0;
 		}
 
 		public override short Int16()
 		{
-			return Unread >= Block16.Size ? Read16().Signed : (short)0;
+			return Unread >= Block16.Size ? Read16().Signed : (short) 0;
 		}
 
 		public override int Int32()
@@ -110,16 +110,16 @@ namespace StolenNetwork.RakNet
 		public override int Bytes(byte[] buffer, int offset, int count)
 		{
 			return _stream.Read(buffer, offset, count);
-        }
+		}
 
 		public override long Seek(long offset, SeekOrigin origin)
 		{
 			return _stream.Seek(offset, origin);
-        }
+		}
 
-        #endregion
+		#endregion
 
-        #region Private Methods
+		#region Private Methods
 
 		private byte[] GetBuffer()
 		{
@@ -190,6 +190,6 @@ namespace StolenNetwork.RakNet
 			};
 		}
 
-        #endregion
-    }
+		#endregion
+	}
 }

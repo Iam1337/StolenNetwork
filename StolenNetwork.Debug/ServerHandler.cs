@@ -24,6 +24,11 @@ namespace StolenNetwork.Debug
 			Console.WriteLine($"[SERVER] Client Disconnected: {connection.Address}.");
         }
 
+		public void HandshakeCallback(Connection connection, PacketWriter writer)
+		{
+			throw new NotImplementedException();
+		}
+
 		#endregion
 	}
 }

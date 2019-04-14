@@ -3,14 +3,9 @@
     public enum StolenPacketType : byte
     {
         /// <summary>
-        /// Информация о сервере или клиенте.
-        /// </summary>
-        Handshake = 0,
-
-        /// <summary>
         /// Причина отключения.
         /// </summary>
-        DisconnectReason = 1,
+        DisconnectReason = 0,
     }
 
     /// <summary>

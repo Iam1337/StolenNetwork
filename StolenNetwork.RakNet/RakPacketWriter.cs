@@ -11,13 +11,13 @@ namespace StolenNetwork.RakNet
 
 		public override long Length => _stream.Length;
 
-		public override long Position {
+		public override long Position
+		{
 			get => _stream.Position;
 			set => _stream.Position = value;
 		}
-
-
-        #endregion
+		
+		#endregion
 
         #region Private Vars
 
@@ -79,6 +79,7 @@ namespace StolenNetwork.RakNet
 
 		public override void PacketId(byte packetType)
 		{
+			// TODO: Create range.
 			if (packetType > byte.MaxValue - (byte)DefaultPacketType.USER_PACKET_ENUM)
 				throw new Exception($"[RakWrap] TODO: Ты не можешь использовать id больше {byte.MaxValue - (byte)DefaultPacketType.USER_PACKET_ENUM}");
 

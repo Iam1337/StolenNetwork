@@ -14,6 +14,8 @@ namespace StolenNetwork
             void ClientConnected(Connection connection);
 
             void ClientDisconnected(Connection connection, string reason);
+
+	        void HandshakeCallback(Connection connection, PacketWriter writer);
         }
 
         #endregion
@@ -97,13 +99,6 @@ namespace StolenNetwork
 
             _connections.Add(connection);
             _connectionsGuids.Add(connection.Guid, connection);
-
-            if (!Writer.Start())
-                return;
-
-            Writer.PacketId((byte) StolenPacketType.Handshake);
-            //TODO: Write server info.
-            Writer.Send(new PacketInfo(connection));
 
             if (CallbackHandler != null)
                 CallbackHandler.ClientConnected(connection);
