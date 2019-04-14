@@ -15,9 +15,9 @@ namespace StolenNetwork
 
         public Network Network { get; }
 
-        public virtual long Length => 0;
+        public virtual long Length { get; }
 
-        public virtual long Position => 0;
+        public virtual long Position { get; set; }
 
         #endregion
 
@@ -51,7 +51,7 @@ namespace StolenNetwork
 
         public abstract void Double(double value);
 
-        public abstract void Bytes(byte[] buffer, int offset, int count);
+        public abstract void Bytes(byte[] buffer, int offset, int length);
 
         public void Bytes(byte[] buffer, int length)
         {

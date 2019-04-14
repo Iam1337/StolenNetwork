@@ -13,12 +13,12 @@ namespace StolenNetwork.Debug
 
 		public void ClientConnected()
 		{
-			Console.WriteLine($"Client Connected!");
+			Console.WriteLine($"[CLIENT] Connected!");
         }
 
 		public void ClientDisconnected(DisconnectType disconnectType, string reason)
 		{
-			Console.WriteLine($"Client Disconnected: {disconnectType}:{reason}.");
+			Console.WriteLine($"[CLIENT] Disconnected: {disconnectType}:{reason}.");
         }
 
 		#endregion

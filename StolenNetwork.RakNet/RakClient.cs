@@ -32,8 +32,8 @@ namespace StolenNetwork.RakNet
 
 			if (_peer != null)
 			{
-				Writer = new RakPacketWriter(this);
-				Reader = new RakPacketReader(this);
+				Writer = new RakPacketWriter(_peer, this);
+				Reader = new RakPacketReader(_peer, this);
 
 				Connection = new Connection();
 				Connection.State = ConnectionState.Unconnected;
@@ -232,7 +232,7 @@ namespace StolenNetwork.RakNet
 				if (CallbackHandler != null)
 					CallbackHandler.ClientConnected();
 
-				return true;
+                return true;
 			}
 
 			if (packetType == DefaultPacketType.CONNECTION_ATTEMPT_FAILED)

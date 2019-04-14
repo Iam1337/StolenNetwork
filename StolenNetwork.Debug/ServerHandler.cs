@@ -8,17 +8,20 @@ namespace StolenNetwork.Debug
 
 		public void PacketProcess(Packet packet)
 		{
-			
+			if (packet.Type == 4)
+			{
+				Console.WriteLine(packet.Reader.String());
+			}
 		}
 
 		public void ClientConnected(Connection connection)
 		{
-			Console.WriteLine($"Client Connected: {connection.Address}.");
+			Console.WriteLine($"[SERVER] Client Connected: {connection.Address}.");
 		}
 
 		public void ClientDisconnected(Connection connection, string reason)
 		{
-			Console.WriteLine($"Client Disconnected: {connection.Address}.");
+			Console.WriteLine($"[SERVER] Client Disconnected: {connection.Address}.");
         }
 
 		#endregion

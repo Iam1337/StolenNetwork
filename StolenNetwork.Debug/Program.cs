@@ -24,7 +24,19 @@ namespace StolenNetwork.Debug
 
 	        while (true)
 	        {
-				Thread.Sleep(1000);
+				_client.Tick();
+				_server.Tick();
+
+		        if (_client.Connection.Connected)
+		        {
+			        var writer = _client.Writer;
+			        writer.Start();
+			        writer.PacketId(4);
+			        writer.String("PING");
+			        writer.Send(new PacketInfo(_client.Connection));
+		        }
+
+		        Thread.Sleep(1000);
 	        }
 			
         }

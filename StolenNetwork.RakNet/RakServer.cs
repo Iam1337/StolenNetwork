@@ -48,8 +48,8 @@ namespace StolenNetwork.RakNet
 
 		    if (_peer != null)
 		    {
-				Writer = new RakPacketWriter(this);
-				Reader = new RakPacketReader(this);
+				Writer = new RakPacketWriter(_peer, this);
+				Reader = new RakPacketReader(_peer, this);
 
 			    return true;
 		    }
@@ -262,7 +262,7 @@ namespace StolenNetwork.RakNet
                     AddConnection(connection);
 		        }
 
-		        return true;
+                return true;
             }
 
 	        return false;

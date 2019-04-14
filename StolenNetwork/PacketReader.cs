@@ -16,9 +16,9 @@ namespace StolenNetwork
 
         public Network Network { get; }
 
-        public virtual long Length => 0;
+        public abstract long Length { get; }
 
-        public virtual long Position => 0;
+        public abstract long Position { get; set; }
 
         public virtual long Unread => Length - Position;
 
@@ -53,6 +53,8 @@ namespace StolenNetwork
         public abstract double Double();
 
         public abstract int Bytes(byte[] buffer, int offset, int count);
+
+	    public abstract long Seek(long offset, SeekOrigin origin);
 
         public byte[] Bytes()
         {
