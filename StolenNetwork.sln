@@ -5,9 +5,7 @@ VisualStudioVersion = 15.0.28307.489
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StolenNetwork", "StolenNetwork\StolenNetwork.csproj", "{8E8A6C0D-D7B9-47CE-BF87-6A4DF24F461B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StolenNetwork.RakNet", "StolenNetwork.RakNet\StolenNetwork.RakNet.csproj", "{59CE7B50-A787-4985-B6FC-6B7EDECFCA4C}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StolenNetwork.Debug", "StolenNetwork.Debug\StolenNetwork.Debug.csproj", "{6B57648E-5183-42CD-B124-3C7EF2009E1D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StolenNetwork.Debug", "StolenNetwork.Debug\StolenNetwork.Debug.csproj", "{6B57648E-5183-42CD-B124-3C7EF2009E1D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,10 +17,6 @@ Global
 		{8E8A6C0D-D7B9-47CE-BF87-6A4DF24F461B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8E8A6C0D-D7B9-47CE-BF87-6A4DF24F461B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8E8A6C0D-D7B9-47CE-BF87-6A4DF24F461B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{59CE7B50-A787-4985-B6FC-6B7EDECFCA4C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{59CE7B50-A787-4985-B6FC-6B7EDECFCA4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{59CE7B50-A787-4985-B6FC-6B7EDECFCA4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{59CE7B50-A787-4985-B6FC-6B7EDECFCA4C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6B57648E-5183-42CD-B124-3C7EF2009E1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6B57648E-5183-42CD-B124-3C7EF2009E1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6B57648E-5183-42CD-B124-3C7EF2009E1D}.Release|Any CPU.ActiveCfg = Release|Any CPU

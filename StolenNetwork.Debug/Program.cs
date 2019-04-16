@@ -1,10 +1,12 @@
-﻿using System;
-using System.Threading;
-
-using StolenNetwork.RakNet;
+﻿using System.Threading;
 
 namespace StolenNetwork.Debug
 {
+    public enum PacketType
+    {
+        Ping = StolenPacketType.NUMBER_OF_TYPES,
+    }
+
     public class Program
     {
         private static Server _server;
@@ -13,12 +15,12 @@ namespace StolenNetwork.Debug
 
         static void Main(string[] args)
         {
-	        _server = new RakServer();
+	        _server = new Server();
 	        _server.CallbackHandler = new ServerHandler();
             _server.Start("127.0.0.1", 7000, 20);
 			
 
-            _client = new RakClient();
+            _client = new Client();
 			_client.CallbackHandler = new ClientHandler();
 	        _client.Connect("127.0.0.1", 7000);
 
@@ -27,11 +29,11 @@ namespace StolenNetwork.Debug
 				_client.Tick();
 				_server.Tick();
 
-		        if (_client.Connection.Connected)
+		        if (_client.Connection.IsConnected)
 		        {
 			        var writer = _client.Writer;
 			        writer.Start();
-			        writer.PacketId(4);
+			        writer.PacketId((byte) PacketType.Ping);
 			        writer.String("PING");
 			        writer.Send(new PacketInfo(_client.Connection));
 		        }

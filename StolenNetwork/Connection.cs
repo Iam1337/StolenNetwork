@@ -11,7 +11,7 @@ namespace StolenNetwork
         // CONNECTION INFO
         public ConnectionState State;
 
-        public bool Connected;
+        public bool IsConnected;
 
         public ulong Guid;
 

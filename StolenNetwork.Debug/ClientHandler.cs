@@ -6,6 +6,11 @@ namespace StolenNetwork.Debug
 	{
 		#region Public Methods
 
+        public void Tick()
+	    {
+
+	    }
+
 		public void PacketProcess(Packet packet)
 		{
 			

@@ -4,11 +4,16 @@ namespace StolenNetwork.Debug
 {
 	public class ServerHandler : Server.IHandler
 	{
-		#region Public Vars
+        #region Public Vars
 
-		public void PacketProcess(Packet packet)
+	    public void Tick()
+	    {
+
+	    }
+
+        public void PacketProcess(Packet packet)
 		{
-			if (packet.Type == 4)
+			if (packet.Type == (byte) PacketType.Ping)
 			{
 				Console.WriteLine(packet.Reader.String());
 			}

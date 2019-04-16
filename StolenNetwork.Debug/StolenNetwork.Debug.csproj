@@ -12,7 +12,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\StolenNetwork.RakNet\StolenNetwork.RakNet.csproj" />
     <ProjectReference Include="..\StolenNetwork\StolenNetwork.csproj" />
   </ItemGroup>
 

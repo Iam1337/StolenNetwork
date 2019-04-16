@@ -1,9 +1,12 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text;
+
+using StolenNetwork.Converters;
 
 namespace StolenNetwork
 {
-    public abstract class PacketWriter
+    public class PacketWriter : IDisposable
     {
         #region Static Public Vars
 
@@ -13,45 +16,144 @@ namespace StolenNetwork
 
         #region Public Vars
 
-        public Network Network { get; }
+        public long Length => _stream.Length;
 
-        public virtual long Length { get; }
+        public long Position {
+            get => _stream.Position;
+            set => _stream.Position = value;
+        }
 
-        public virtual long Position { get; set; }
+        #endregion
+
+        #region Private Vars
+
+        private Network _network;
+
+        private Peer _peer;
+
+        private MemoryStream _stream;
 
         #endregion
 
         #region Public Methods
 
-        public abstract bool Start();
+        public PacketWriter(Peer peer, Network network)
+        {
+            _network = network;
+            _peer = peer;
+            _stream = new MemoryStream();
+        }
 
-        public abstract void Send(PacketInfo info);
+        public bool Start()
+        {
+            if (_peer == null)
+                return false;
 
-        public abstract void PacketId(byte packetType);
+            _stream.Position = 0;
+            _stream.SetLength(0);
 
-        public abstract void UInt8(byte value);
+            return true;
+        }
 
-        public abstract void UInt16(ushort value);
+        public void Send(PacketInfo info)
+        {
+            if (info.Broadcast)
+            {
+                _peer.PacketStart();
+                _peer.PacketWrite(_stream);
+                _peer.PacketBroadcast(info.Priority, info.Reliability, (byte)info.Channel);
 
-        public abstract void UInt32(uint value);
+                return;
+            }
 
-        public abstract void UInt64(ulong value);
+            if (info.Connections != null)
+            {
+                foreach (var connection in info.Connections)
+                {
+                    if (connection == info.ExcludeConnection) continue;
 
-        public abstract void Int8(sbyte value);
+                    _peer.PacketStart();
+                    _peer.PacketWrite(_stream);
+                    _peer.PacketSend(connection.Guid, info.Priority, info.Reliability, (byte)info.Channel);
+                }
+            }
 
-        public abstract void Int16(short value);
+            if (info.Connection != null)
+            {
+                _peer.PacketStart();
+                _peer.PacketWrite(_stream);
+                _peer.PacketSend(info.Connection.Guid, info.Priority, info.Reliability, (byte)info.Channel);
+            }
+        }
 
-        public abstract void Int32(int value);
+        public void PacketId(byte packetId)
+        {
+            // TODO: Create range.
+            if (packetId < (byte)RakPacketType.NUMBER_OF_TYPES)
+                throw new Exception($"[RakWrap] TODO: Ты не можешь использовать id меньше чем {(byte)RakPacketType.NUMBER_OF_TYPES}");
 
-        public abstract void Int64(long value);
+            UInt8(packetId);
+        }
 
-        public abstract void Bool(bool value);
+        public void UInt8(byte value)
+        {
+            WriteBlock8(new Block8 { Unsigned = value });
+        }
 
-        public abstract void Float(float value);
+        public void UInt16(ushort value)
+        {
+            WriteBlock16(new Block16 { Unsigned = value });
+        }
 
-        public abstract void Double(double value);
+        public void UInt32(uint value)
+        {
+            WriteBlock32(new Block32 { Unsigned = value });
+        }
 
-        public abstract void Bytes(byte[] buffer, int offset, int length);
+        public void UInt64(ulong value)
+        {
+            WriteBlock64(new Block64 { Unsigned = value });
+        }
+
+        public void Int8(sbyte value)
+        {
+            WriteBlock8(new Block8 { Signed = value });
+        }
+
+        public void Int16(short value)
+        {
+            WriteBlock16(new Block16 { Signed = value });
+        }
+
+        public void Int32(int value)
+        {
+            WriteBlock32(new Block32 { Signed = value });
+        }
+
+        public void Int64(long value)
+        {
+            WriteBlock64(new Block64 { Signed = value });
+        }
+
+        public void Bool(bool value)
+        {
+            _stream.WriteByte((byte)(value ? 1 : 0));
+        }
+
+        public void Float(float value)
+        {
+            WriteBlock32(new Block32 { Float = value });
+        }
+
+        public void Double(double value)
+        {
+            WriteBlock64(new Block64 { Float = value });
+        }
+
+        public void Bytes(byte[] buffer, int offset, int length)
+        {
+            _stream.Write(buffer, offset, length);
+        }
 
         public void Bytes(byte[] buffer, int length)
         {
@@ -59,7 +161,7 @@ namespace StolenNetwork
             {
                 UInt32(0);
             }
-            else if (length > Network.MaxPacketSize)
+            else if (length > _network.MaxPacketSize)
             {
                 UInt32(0);
                 // TODO: Debug.LogError("BytesWithSize: Too big " + length);
@@ -77,7 +179,7 @@ namespace StolenNetwork
             {
                 UInt32(0);
             }
-            else if (buffer.Length > Network.MaxPacketSize)
+            else if (buffer.Length > _network.MaxPacketSize)
             {
                 UInt32(0);
                 // TODO: Debug.LogError("BytesWithSize: Too big " + length);
@@ -123,16 +225,73 @@ namespace StolenNetwork
             }
         }
 
-	    public virtual void Dispose()
-	    { }
+        public void Dispose()
+        {
+            _stream.Dispose();
+        }
 
         #endregion
 
-        #region Protected Methods
+        #region Private Methods
 
-        protected PacketWriter(Network network)
+        private byte[] GetBuffer()
         {
-            Network = network;
+            return _stream.GetBuffer();
+        }
+
+        private long CreateOffset(long offset)
+        {
+            var position = _stream.Position;
+
+            if (_stream.Length < position + offset)
+                _stream.SetLength(position + offset);
+
+            _stream.Position = position + offset;
+
+            return position;
+        }
+
+        private void WriteBlock8(Block8 block)
+        {
+            var offset = CreateOffset(1);
+            var buffer = GetBuffer();
+
+            buffer[offset] = block.Byte1;
+        }
+
+        private void WriteBlock16(Block16 block)
+        {
+            var offset = CreateOffset(2);
+            var buffer = GetBuffer();
+
+            buffer[offset] = block.Byte1;
+            buffer[offset + 1] = block.Byte2;
+        }
+
+        private void WriteBlock32(Block32 block)
+        {
+            var offset = CreateOffset(4);
+            var buffer = GetBuffer();
+
+            buffer[offset] = block.Byte1;
+            buffer[offset + 1] = block.Byte2;
+            buffer[offset + 2] = block.Byte3;
+            buffer[offset + 3] = block.Byte4;
+        }
+
+        private void WriteBlock64(Block64 block)
+        {
+            var offset = CreateOffset(8);
+            var buffer = GetBuffer();
+
+            buffer[offset] = block.Byte1;
+            buffer[offset + 1] = block.Byte2;
+            buffer[offset + 2] = block.Byte3;
+            buffer[offset + 3] = block.Byte4;
+            buffer[offset + 4] = block.Byte5;
+            buffer[offset + 5] = block.Byte6;
+            buffer[offset + 6] = block.Byte7;
+            buffer[offset + 7] = block.Byte8;
         }
 
         #endregion
