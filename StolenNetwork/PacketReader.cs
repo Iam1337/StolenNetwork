@@ -57,7 +57,7 @@ namespace StolenNetwork
             return true;
         }
 
-        public byte PacketType()
+        public byte PacketId()
         {
             return UInt8();
         }

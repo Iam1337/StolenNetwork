@@ -8,13 +8,13 @@ namespace StolenNetwork
     {
         #region Static Private Vars
 
-        private static readonly string _serverTickWarning = "[STOLEN NETWORK RAKNET: SERVER] RakServer.Tick";
+        private static readonly string _serverTickWarning = "[STOLEN SERVER] Server.Tick";
 
-        private static readonly string _serverProcessWarning = "[STOLEN NETWORK RAKNET: SERVER] RakServer.ProcessMessage";
+        private static readonly string _serverProcessWarning = "[STOLEN SERVER] Server.ProcessMessage";
 
-        private static readonly string _serverProcessConnectedWarning = "[STOLEN NETWORK RAKNET: SERVER] RakServer.ProcessConnectedMessage";
+        private static readonly string _serverProcessConnectedWarning = "[STOLEN SERVER] Server.ProcessConnectedMessage";
 
-        private static readonly string _serverProcessUnconnectedWarning = "[STOLEN NETWORK RAKNET: SERVER] RakServer.ProcessUnconnectedMessage";
+        private static readonly string _serverProcessUnconnectedWarning = "[STOLEN SERVER] Server.ProcessUnconnectedMessage";
 
         #endregion
 
@@ -24,11 +24,11 @@ namespace StolenNetwork
         {
             void PacketProcess(Packet packet);
 
-            void ClientConnected(Connection connection);
+            void ClientConnecting(Connection connection, PacketWriter writer);
+
+	        void ClientConnected(Connection connection, PacketReader reader);
 
             void ClientDisconnected(Connection connection, string reason);
-
-	        void HandshakeCallback(Connection connection, PacketWriter writer);
         }
 
         #endregion
@@ -73,7 +73,7 @@ namespace StolenNetwork
         public virtual bool Start(string host, ushort port, ushort connectionsCount)
         {
             if (_peer != null)
-                throw new Exception("[STOLEN NETWORK RAKNET: SERVER] Server is already running.");
+                throw new Exception("[STOLEN SERVER] Server is already running.");
 
             Host = host;
             Port = port;
@@ -100,7 +100,7 @@ namespace StolenNetwork
         public void Stop(string reason)
         {
             if (_peer == null)
-                throw new Exception("[STOLEN NETWORK RAKNET: SERVER] Server is not running.");
+                throw new Exception("[STOLEN SERVER] Server is not running.");
 
             //TODO: Debug.Log($"[SERVER RAKNET] Server Shutting Down: {reason}");
 
@@ -170,9 +170,8 @@ namespace StolenNetwork
             if (reason == null)
                 throw new ArgumentNullException(nameof(reason));
 
-            if (Writer.Start())
+            if (Writer.Start((byte)StolenPacketType.DisconnectReason))
             {
-                Writer.PacketId((byte)StolenPacketType.DisconnectReason);
                 Writer.String(reason);
                 Writer.Send(new PacketInfo(connection,
                                            PacketReliability.ReliableUnordered,
@@ -215,9 +214,6 @@ namespace StolenNetwork
 
             _connections.Add(connection);
             _connectionsGuids.Add(connection.Guid, connection);
-
-            if (CallbackHandler != null)
-                CallbackHandler.ClientConnected(connection);
         }
 
         protected void RemoveConnection(Connection connection)
@@ -238,13 +234,6 @@ namespace StolenNetwork
 
             var guid = _peer.GetPacketGUID();
 
-            /*
-		    if (IsDemoRecording)
-		    {
-			    RecordMessage(guid);
-		    }
-			*/
-
             var connection = GetConnection(guid);
             if (connection != null)
             {
@@ -264,7 +253,7 @@ namespace StolenNetwork
 
         private void ProcessConnectedPacket(Connection connection)
         {
-            /* TODO: MPS STATS
+            /* TODO: Убивать подключение по превышении статистики.
             if (connection.GetMPSStats() >= MaxPacketsPerSecond)
             {
                 Drop(connection, "Packet Flooding");
@@ -274,16 +263,20 @@ namespace StolenNetwork
             else
 			*/
             {
-                var packetType = Reader.PacketType();
+                var packetId = Reader.PacketId();
 
-                if (ProcessRakNetPacket(packetType, connection))
+                if (ProcessRakNetPacket(packetId, connection))
                     return;
 
-                //var customId = (byte)(packetId - (byte)RakPacketType.NUMBER_OF_TYPES); //RakNetUtils.LowestUserPacket;
-                var packet = CreatePacket(packetType, connection);
+				if (ProcessStolenPacket(packetId, connection, Reader))
+					return;
 
-                //TODO: connection.AddMessageStats();
-                //TODO: connection.AddMessageStats(customId);
+				// Process packet.
+                var packet = CreatePacket(packetId, connection);
+
+				//TODO: Добавить статистику подсчета сообщений.
+                // connection.AddMessageStats();
+                // connection.AddMessageStats(customId);
 
                 if (CallbackHandler != null)
                     CallbackHandler.PacketProcess(packet);
@@ -294,15 +287,15 @@ namespace StolenNetwork
 
         private void ProcessUnconnectedMessage()
         {
-            ProcessRakNetPacket(Reader.PacketType(), null);
+            ProcessRakNetPacket(Reader.PacketId(), null);
         }
 
-        private bool ProcessRakNetPacket(byte type, Connection connection)
+        private bool ProcessRakNetPacket(byte packetId, Connection connection)
         {
-            if (type >= (byte)RakPacketType.NUMBER_OF_TYPES)
+            if (packetId >= (byte)RakPacketType.NUMBER_OF_TYPES)
                 return false;
 
-            var packetType = (RakPacketType)type;
+            var packetType = (RakPacketType)packetId;
             if (packetType != RakPacketType.NEW_INCOMING_CONNECTION)
             {
                 if (packetType != RakPacketType.DISCONNECTION_NOTIFICATION)
@@ -338,19 +331,57 @@ namespace StolenNetwork
                 connection.State = ConnectionState.Connecting;
 
                 if (string.IsNullOrEmpty(connection.Address) || connection.Address == "UNASSIGNED_SYSTEM_ADDRESS")
-                    return false;
+                    return true;
 
                 //using (TimeKeeper.Warning("RakNet: Server.CreateConnection", 20D))
                 {
                     AddConnection(connection);
                 }
 
-                return true;
+	            if (Writer.Start((byte) StolenPacketType.Handshake))
+	            {
+					if (CallbackHandler != null)
+			            CallbackHandler.ClientConnecting(connection, Writer);
+
+		            Writer.Send(new PacketInfo(connection));
+	            }
+	            else
+	            {
+		            throw new Exception("TODO");
+	            }
+
+	            return true;
             }
 
             // Тут мы ловим другие доступные пакеты RakNet.
             return false;
         }
+
+	    private bool ProcessStolenPacket(byte packetId, Connection connection, PacketReader reader)
+	    {
+		    if (packetId >= (byte)StolenPacketType.NUMBER_OF_TYPES)
+			    return false;
+
+		    var packetType = (StolenPacketType)packetId;
+		    if (packetType == StolenPacketType.Handshake)
+		    {
+			    connection.State = ConnectionState.Connected;
+
+			    if (CallbackHandler != null)
+				    CallbackHandler.ClientConnected(connection, reader);
+
+                return true;
+		    }
+
+		    if (packetType == StolenPacketType.DisconnectReason)
+		    {
+			    connection.DisconnectReason = reader.String();
+
+			    return true;
+		    }
+			
+		    return true;
+	    }
 
         #endregion
     }

@@ -55,6 +55,16 @@ namespace StolenNetwork
             return true;
         }
 
+	    public bool Start(byte packetId)
+	    {
+		    if (!Start())
+			    return false;
+
+			PacketId(packetId);
+
+		    return true;
+	    }
+
         public void Send(PacketInfo info)
         {
             if (info.Broadcast)
@@ -90,7 +100,7 @@ namespace StolenNetwork
         {
             // TODO: Create range.
             if (packetId < (byte)RakPacketType.NUMBER_OF_TYPES)
-                throw new Exception($"[RakWrap] TODO: Ты не можешь использовать id меньше чем {(byte)RakPacketType.NUMBER_OF_TYPES}");
+                throw new Exception($"[STOLEN WRITER] TODO: Ты не можешь использовать id меньше чем {(byte)RakPacketType.NUMBER_OF_TYPES}");
 
             UInt8(packetId);
         }
@@ -163,8 +173,7 @@ namespace StolenNetwork
             }
             else if (length > _network.MaxPacketSize)
             {
-                UInt32(0);
-                // TODO: Debug.LogError("BytesWithSize: Too big " + length);
+	            throw new ArgumentOutOfRangeException($"[STOLEN WRITER] Buffer size is bigger when {_network.MaxPacketSize}");
             }
             else
             {
@@ -181,8 +190,7 @@ namespace StolenNetwork
             }
             else if (buffer.Length > _network.MaxPacketSize)
             {
-                UInt32(0);
-                // TODO: Debug.LogError("BytesWithSize: Too big " + length);
+                throw new ArgumentOutOfRangeException($"[STOLEN WRITER] Buffer size is bigger when {_network.MaxPacketSize}");
             }
             else
             {
@@ -197,10 +205,13 @@ namespace StolenNetwork
             {
                 UInt32(0);
             }
-            else
-            {
-                Bytes(memoryStream.GetBuffer());
-            }
+	        else
+	        {
+		        var buffer = memoryStream.GetBuffer();
+
+		        UInt32((uint) memoryStream.Length);
+		        Bytes(buffer, 0, (int) memoryStream.Length);
+	        }
         }
 
         public void String(string value)

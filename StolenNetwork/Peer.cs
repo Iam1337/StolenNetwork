@@ -16,7 +16,9 @@ namespace StolenNetwork
 				if (peerPointer != IntPtr.Zero)
 				    Native.PEER_DestroyInstance(peerPointer);
 
-			    return null;
+				// TODO: Exceptions.
+
+				return null;
 		    }
 
 	        return new Peer { _peerPointer = peerPointer };
@@ -31,7 +33,17 @@ namespace StolenNetwork
 			    if (peerPointer != IntPtr.Zero)
 				    Native.PEER_DestroyInstance(peerPointer);
 
-			    return null;
+			    // TODO: Exceptions.
+                if (result < 100)
+			    {
+
+			    }
+			    else
+			    {
+				    
+			    }
+
+				return null;
             }
 
 	        return new Peer { _peerPointer = peerPointer };
@@ -103,7 +115,7 @@ namespace StolenNetwork
 
             var length = GetPacketLength();
 
-            if (stream.Capacity < length)
+			if (stream.Capacity < length)
                 stream.Capacity = length + 32;
 
             stream.SetLength(stream.Capacity);
@@ -116,7 +128,7 @@ namespace StolenNetwork
                     return false;
                 }
             }
-
+			
             stream.SetLength(length);
             return true;
         }

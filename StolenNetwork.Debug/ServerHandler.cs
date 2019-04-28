@@ -4,9 +4,15 @@ namespace StolenNetwork.Debug
 {
 	public class ServerHandler : Server.IHandler
 	{
-        #region Public Vars
+		#region Public Vars
 
-	    public void Tick()
+		public string ServerName;
+
+		#endregion
+
+        #region Public Methods
+
+        public void Tick()
 	    {
 
 	    }
@@ -15,24 +21,28 @@ namespace StolenNetwork.Debug
 		{
 			if (packet.Type == (byte) PacketType.Ping)
 			{
-				Console.WriteLine(packet.Reader.String());
+				Console.WriteLine("% " + packet.Reader.String());
 			}
 		}
 
-		public void ClientConnected(Connection connection)
+		public void ClientConnecting(Connection connection, PacketWriter writer)
 		{
-			Console.WriteLine($"[SERVER] Client Connected: {connection.Address}.");
-		}
+			writer.String(ServerName);
+
+			Console.WriteLine($"[SERVER] Client Connecting: {connection.Address}.");
+        }
+
+		public void ClientConnected(Connection connection, PacketReader reader)
+		{
+			var userName = reader.String();
+
+			Console.WriteLine($"[SERVER] Client Connected: {connection.Address}:{userName}.");
+        }
 
 		public void ClientDisconnected(Connection connection, string reason)
 		{
 			Console.WriteLine($"[SERVER] Client Disconnected: {connection.Address}.");
         }
-
-		public void HandshakeCallback(Connection connection, PacketWriter writer)
-		{
-			throw new NotImplementedException();
-		}
 
 		#endregion
 	}

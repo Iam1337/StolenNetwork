@@ -2,13 +2,13 @@
 {
     public enum StolenPacketType : byte
     {
+		Handshake = RakPacketType.NUMBER_OF_TYPES,
+
         /// <summary>
         /// Причина отключения.
         /// </summary>
-        DisconnectReason = RakPacketType.NUMBER_OF_TYPES,
-
-
-
+        DisconnectReason,
+		
         /// <summary>
         /// Используйте это значение для своих типов.
         /// </summary>
@@ -408,6 +408,4 @@
         /// </summary>
         NUMBER_OF_TYPES,
     }
-
-
 }

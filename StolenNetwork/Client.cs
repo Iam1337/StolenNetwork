@@ -13,7 +13,9 @@ namespace StolenNetwork
 
 		    void PacketProcess(Packet packet);
 
-	        void ClientConnected();
+	        void ClientConnecting();
+
+	        void ClientConnected(PacketReader reader, PacketWriter writer);
 
             void ClientDisconnected(DisconnectType disconnectType, string reason);
 			
@@ -50,21 +52,13 @@ namespace StolenNetwork
 
         #endregion
 
-        #region Protected Methods
-
-        protected bool connectionAccepted;
-
-	    #endregion
-
 	    #region Public Methods
 
 	    // CONECTING/DISCONECTING
 	    public virtual bool Connect(string host, ushort port)
 	    {
 	        if (_peer != null)
-	            throw new Exception("[STOLEN NETWORK: CLIENT] Client is already running.");
-
-	        connectionAccepted = false; //TODO: Зочем?
+	            throw new Exception("[STOLEN CLIENT] Client is already running.");
 
             Host = host;
 		    Port = port;
@@ -100,9 +94,6 @@ namespace StolenNetwork
 	    // GAME LOOP
         public void Tick()
         {
-            //if (IsDemoPlaying)
-            //    return;
-
             if (_peer == null)
                 return;
 
@@ -156,11 +147,10 @@ namespace StolenNetwork
         protected void Disconnect(DisconnectType disconnectType, string reason, bool sendReason)
         {
             if (_peer == null)
-                throw new Exception("[STOLEN NETWORK RAKNET: CLIENT] Client is not running.");
+                throw new Exception("[STOLEN CLIENT] Client is not running.");
 
-            if (sendReason && Writer != null && Writer.Start())
+            if (sendReason && Writer.Start((byte)StolenPacketType.DisconnectReason))
             {
-                Writer.PacketId((byte)StolenPacketType.DisconnectReason);
                 Writer.String(reason);
                 Writer.Send(new PacketInfo(Connection,
                                            PacketReliability.ReliableUnordered,
@@ -190,66 +180,50 @@ namespace StolenNetwork
 
         #region Private Methods
 
-        protected void ProcessPacket()
-        {
-            Reader.Start();
+	    protected void ProcessPacket()
+	    {
+		    Reader.Start();
 
-            /*
-			if (IsDemoRecording)
-			{
-				// На клиенте connectionId не используется.
-				RecordMessage(0);
-			}
-			*/
+		    var packetId = Reader.PacketId();
 
-            var packetType = Reader.PacketType();
+		    if (ProcessRakNetPacket(packetId))
+			    return;
 
-            if (ProcessRakNetPacket(packetType))
-                return;
+		    if (Connection == null)
+		    {
+			    throw new Exception($"[STOLEN CLIENT] Ignoring packet {packetId}. Client Connection is null.");
+		    }
 
-            if (Connection == null)
-            {
-                //TODO: Debug.LogWarning($"[CLIENT RAKNET] Ignoring message {(MessageType) messageId} ({messageId}) clientConnection is null");
-            }
-            else if (Connection.Guid != _peer.GetPacketGUID())
-            {
-                //TODO: Debug.LogWarning($"[CLIENT RAKNET] Wrong ReceiveId {_rakNet.ReceiveId}");
-            }
-            /*
-			// TODO: А надо ли делать проверку на перебор?
-			else if (messageId > messageTypesCount)
-			{
-				//Debug.LogWarning();
-				Disconnect($"Invalid Packet ({messageId}) {_rakNet.ReceiveBytes} bytes", true);
-				throw new Exception($"[CLIENT RAKNET] Invalid Packet (higher than {messageTypesCount})");
-			}
-			*/
-            else
-            {
-                var packet = CreatePacket(packetType, Connection); //CreateMessage((MessageType) messageId, Connection);
-                
-                try
-                {
-                    //using (TimeKeeper.Warning(_clientProcessMessageWarning, 20D))
-                    {
-                        if (CallbackHandler != null)
-                            CallbackHandler.PacketProcess(packet);
-                    }
-                }
-                catch (Exception exception)
-                {
-                    //if (!IsDemoPlaying)
+		    if (Connection.Guid != _peer.GetPacketGUID())
+		    {
+			    throw new Exception($"[STOLEN CLIENT]  Wrong ReceiveId {_peer.GetPacketGUID()}");
+		    }
 
-                    Disconnect(exception.Message + "\n" + exception.StackTrace, true);
+		    if (ProcessStolenPacket(packetId, Reader))
+			    return;
 
-                    throw exception;
-                }
+			// PROCESS PACKET
+		    var packet = CreatePacket(packetId, Connection);
 
-                ReleasePacket(ref packet);
-            }
-        }
+		    try
+		    {
+			    //using (TimeKeeper.Warning(_clientProcessMessageWarning, 20D))
+			    {
+				    if (CallbackHandler != null)
+					    CallbackHandler.PacketProcess(packet);
+			    }
+		    }
+		    catch (Exception exception)
+		    {
+			    Disconnect(exception.Message + "\n" + exception.StackTrace, true);
 
-        protected bool ProcessRakNetPacket(byte packetId)
+			    throw;
+		    }
+
+		    ReleasePacket(ref packet);
+	    }
+
+	    protected bool ProcessRakNetPacket(byte packetId)
         {
             if (packetId >= (byte)RakPacketType.NUMBER_OF_TYPES)
                 return false;
@@ -260,17 +234,17 @@ namespace StolenNetwork
             var packetType = (RakPacketType)packetId;
             if (packetType == RakPacketType.CONNECTION_REQUEST_ACCEPTED)
             {
-                connectionAccepted = true;
+                //connectionAccepted = true;
 
-                //if (Connection.Guid != 0)
-                // TODO: Debug.LogWarning("[CLIENT RAKNET] Multiple PacketType.CONNECTION_REQUEST_ACCEPTED");
+                if (Connection.Guid != 0)
+					throw new Exception($"[STOLEN CLIENT] Multiple PacketType.CONNECTION_REQUEST_ACCEPTED.");
 
                 Connection.Guid = _peer.GetPacketGUID();
                 Connection.IsConnected = true;
                 Connection.State = ConnectionState.Connecting;
 
                 if (CallbackHandler != null)
-                    CallbackHandler.ClientConnected();
+                    CallbackHandler.ClientConnecting();
 
                 return true;
             }
@@ -313,14 +287,49 @@ namespace StolenNetwork
 
             if (Connection != null && Connection.Guid != _peer.GetPacketGUID())
             {
-                //TODO: Debug.LogWarning($"[CLIENT RAKNET] Unhandled Raknet packet {packetId} from unknown source {_peer.GetPacketAddress()}");
-                return true;
+				throw new Exception($"[STOLEN CLIENT] Unhandled Raknet packet {packetId} from unknown source {_peer.GetPacketAddress()}");
             }
 
-            //TODO: Тут я сделал возврат False, если я все же хочу видеть все пакеты раковые.
+			//TODO: Тут я сделал возврат False, если я все же хочу видеть все пакеты раковые.
             // TODO: Debug.LogWarning("[CLIENT RAKNET] Unhandled Raknet packet " + packetId);
             return true;
         }
+
+	    protected bool ProcessStolenPacket(byte packetId, PacketReader reader)
+	    {
+		    if (packetId >= (byte)StolenPacketType.NUMBER_OF_TYPES)
+			    return false;
+			
+		    var packetType = (StolenPacketType) packetId;
+		    if (packetType == StolenPacketType.Handshake)
+		    {
+			    Connection.State = ConnectionState.Connected;
+
+			    if (Writer.Start((byte) StolenPacketType.Handshake))
+			    {
+					if (CallbackHandler != null)
+					    CallbackHandler.ClientConnected(reader, Writer);
+
+				    Writer.Send(new PacketInfo(Connection));
+			    }
+			    else
+			    {
+				    throw new Exception("TODO");
+			    }
+
+			    return true;
+		    }
+
+		    if (packetType == StolenPacketType.DisconnectReason)
+		    {
+			    DisconnectReason = reader.String();
+
+			    return true;
+		    }
+
+			// TODO: Process stolen packets.
+			return true;
+	    }
 
         #endregion
     }

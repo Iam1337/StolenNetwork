@@ -10,8 +10,6 @@ namespace StolenNetwork
 
         public virtual int MaxPacketSize => 10 * 1024 * 1024; // 10Mb.
 
-        public virtual byte CustomPacketRange => byte.MaxValue;
-
         public PacketWriter Writer { get; protected set; }
 
         public PacketReader Reader { get; protected set; }
