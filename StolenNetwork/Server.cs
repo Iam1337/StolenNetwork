@@ -133,8 +133,7 @@ namespace StolenNetwork
                     {
                         ProcessPacket();
                     }
-
-
+					
                     var totalMilliseconds = _tickTimer.Elapsed.TotalMilliseconds;
                     if (totalMilliseconds > MaxReceiveTime)
                     {

@@ -19,8 +19,13 @@ namespace StolenNetwork.Debug
 
 		public void PacketProcess(Packet packet)
 		{
-			
-		}
+			if (packet.Type == (byte)PacketType.Ping)
+			{
+				var reader = packet.Reader;
+
+				Console.WriteLine("CLIENT: " + reader.String());
+			}
+        }
 
 		public void ClientConnecting()
 		{

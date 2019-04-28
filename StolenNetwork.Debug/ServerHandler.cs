@@ -21,7 +21,16 @@ namespace StolenNetwork.Debug
 		{
 			if (packet.Type == (byte) PacketType.Ping)
 			{
-				Console.WriteLine("% " + packet.Reader.String());
+				var writer = packet.Writer;
+				var reader = packet.Reader;
+
+				Console.WriteLine("SERVER: " + reader.String());
+
+				if (!writer.Start((byte)PacketType.Ping))
+					throw new Exception();
+
+				writer.String("SERVER PONG");
+				writer.Send(new PacketInfo(packet.Connection));
 			}
 		}
 

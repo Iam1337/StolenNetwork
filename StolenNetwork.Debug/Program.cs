@@ -24,25 +24,19 @@ namespace StolenNetwork.Debug
 	        _server.CallbackHandler = serverHandler;
             _server.Start("127.0.0.1", 7000, 20);
 
-	        var server = new Server();
-	        server.CallbackHandler = serverHandler;
-	        var d = server.Start("127.0.0.1", 7000, 20);
-
             // CLIENT
             var clientHandler = new ClientHandler();
-	        clientHandler.Username = "BUP Client 1";
+	        clientHandler.Username = "BUP Client";
 
             _client = new Client();
 			_client.CallbackHandler = clientHandler;
 	        _client.Connect("127.0.0.1", 7000);
-
-
+			
 	        while (true)
 	        {
 				_client.Tick();
 				_server.Tick();
 
-				/*
 				if (_client.Connection.State == ConnectionState.Connected)
 		        {
 			        var writer = _client.Writer;
@@ -51,9 +45,8 @@ namespace StolenNetwork.Debug
 			        writer.String("CLIENT PING");
 			        writer.Send(new PacketInfo(_client.Connection));
 		        }
-				*/
 
-				Thread.Sleep(10);
+				Thread.Sleep(500);
 	        }
 			
         }
