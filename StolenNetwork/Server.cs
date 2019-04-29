@@ -43,13 +43,19 @@ namespace StolenNetwork
 
         #region Public Vars
 
-        public string Host;
+        public Action<string> OnLog;
 
-        public ushort Port;
+        public Action OnTickDrop;
 
-        public ushort ConnectionsCount;
+        public string Host { get; private set; }
 
-        public IHandler CallbackHandler;
+        public ushort Port { get; private set; }
+
+        public ushort ConnectionsCount { get; private set; }
+
+        public IHandler CallbackHandler { get; }
+
+        public List<Connection> Connections => _connections;
 
         #endregion
 
@@ -68,6 +74,11 @@ namespace StolenNetwork
         #endregion
 
         #region Public Methods
+
+        public Server(IHandler callbackHandler)
+        {
+            CallbackHandler = callbackHandler;
+        }
 
         // SETUP
         public virtual bool Start(string host, ushort port, ushort connectionsCount)
@@ -102,7 +113,8 @@ namespace StolenNetwork
             if (_peer == null)
                 throw new Exception("[STOLEN SERVER] Server is not running.");
 
-            //TODO: Debug.Log($"[SERVER RAKNET] Server Shutting Down: {reason}");
+            if (OnLog != null)
+                OnLog.Invoke($"[STOLEN SERVER] Server Shutting Down: {reason}");
 
             Writer.Dispose();
             Writer = null;
@@ -110,10 +122,7 @@ namespace StolenNetwork
             Reader.Dispose();
             Reader = null;
 
-            //using (TimeKeeper.Warning("RakNet: Server.Stop", 20D))
-            //{
             Peer.Destroy(ref _peer);
-            //}
         }
 
         // LOOP
@@ -122,30 +131,23 @@ namespace StolenNetwork
             if (_peer == null)
                 return;
 
-            //using (TimeKeeper.Warning(_serverTickWarning, 20D))
+            _tickTimer.Reset();
+            _tickTimer.Start();
+
+            while (_peer.IsReceived())
             {
-                _tickTimer.Reset();
-                _tickTimer.Start();
+                //using (TimeKeeper.Warning(_serverProcessWarning, 20D))
+                //{
+                ProcessPacket();
+                //}
 
-                while (_peer.IsReceived())
+                var totalMilliseconds = _tickTimer.Elapsed.TotalMilliseconds;
+                if (totalMilliseconds > MaxReceiveTime)
                 {
-                    //using (TimeKeeper.Warning(_serverProcessWarning, 20D))
-                    {
-                        ProcessPacket();
-                    }
-					
-                    var totalMilliseconds = _tickTimer.Elapsed.TotalMilliseconds;
-                    if (totalMilliseconds > MaxReceiveTime)
-                    {
-                        /* TODO:
-						Debug.Log($"[SERVER RAKNET] Drop interval: {Time.frameCount - _dropFrame} frames, {Time.time - _dropTime} sec.");
+                    if (OnTickDrop != null)
+                        OnTickDrop.Invoke();
 
-						_dropTime = Time.time;
-						_dropFrame = Time.frameCount;
-						*/
-
-                        break;
-                    }
+                    break;
                 }
             }
         }
@@ -161,7 +163,7 @@ namespace StolenNetwork
         public void Kick(Connection connection, string reason)
         {
             if (_peer == null)
-                throw new Exception("[STOLEN NETWORK RAKNET: SERVER] Server is not running.");
+                throw new Exception("[STOLEN SERVER] Server is not running.");
 
             if (connection == null)
                 throw new ArgumentNullException(nameof(connection));
@@ -177,11 +179,28 @@ namespace StolenNetwork
                                            PacketPriority.Immediate));
             }
 
-            //TODO: Debug.Log($"[NETWORK] {connection} dropped: {reason}");
+            if (OnLog != null)
+                OnLog.Invoke($"[STOLEN SERVER] {connection} dropped: {reason}");
 
             _peer.CloseConnection(connection.Guid);
 
             ConnectionDisconnect(connection, reason);
+        }
+
+        // PING
+        public int GetAveragePing(Connection connection)
+        {
+            return _peer.GetConnectionAveragePing(connection.Guid);
+        }
+
+        public int GetLastPing(Connection connection)
+        {
+            return _peer.GetConnectionLastPing(connection.Guid);
+        }
+
+        public int GetLowestPing(Connection connection)
+        {
+            return _peer.GetConnectionLowestPing(connection.Guid);
         }
 
         #endregion
@@ -236,52 +255,44 @@ namespace StolenNetwork
             var connection = GetConnection(guid);
             if (connection != null)
             {
-                //using (TimeKeeper.Warning(_serverProcessConnectedWarning, 20D))
-                {
-                    ProcessConnectedPacket(connection);
-                }
+                ProcessConnectedPacket(connection);
             }
             else
             {
-                //using (TimeKeeper.Warning(_serverProcessUnconnectedWarning, 20D))
-                {
-                    ProcessUnconnectedMessage();
-                }
+                ProcessUnconnectedMessage();
             }
         }
 
         private void ProcessConnectedPacket(Connection connection)
         {
-            /* TODO: Убивать подключение по превышении статистики.
-            if (connection.GetMPSStats() >= MaxPacketsPerSecond)
+            if (connection.GetPacketPerSecond() >= MaxPacketsPerSecond)
             {
-                Drop(connection, "Packet Flooding");
+                Kick(connection, "Packet Flooding");
 
-                Debug.LogWarning($"[NETWORK] {connection} was kicked for packet flooding");
+                if (OnLog != null)
+                    OnLog.Invoke($"[STOLEN SERVER] {connection} was kicked for packet flooding.");
+
+                return;
             }
-            else
-			*/
-            {
-                var packetId = Reader.PacketId();
 
-                if (ProcessRakNetPacket(packetId, connection))
-                    return;
+            var packetId = Reader.PacketId();
 
-				if (ProcessStolenPacket(packetId, connection, Reader))
-					return;
+            if (ProcessRakNetPacket(packetId, connection))
+                return;
 
-				// Process packet.
-                var packet = CreatePacket(packetId, connection);
+            if (ProcessStolenPacket(packetId, connection, Reader))
+                return;
 
-				//TODO: Добавить статистику подсчета сообщений.
-                // connection.AddMessageStats();
-                // connection.AddMessageStats(customId);
+            // Process packet.
+            var packet = CreatePacket(packetId, connection);
 
-                if (CallbackHandler != null)
-                    CallbackHandler.PacketProcess(packet);
+            connection.AddPacketStats();
+            connection.AddPacketStats(packetId);
 
-                ReleasePacket(ref packet);
-            }
+            if (CallbackHandler != null)
+                CallbackHandler.PacketProcess(packet);
+
+            ReleasePacket(ref packet);
         }
 
         private void ProcessUnconnectedMessage()
@@ -302,20 +313,13 @@ namespace StolenNetwork
                     if (packetType != RakPacketType.CONNECTION_LOST || connection == null)
                         return true;
 
-                    //using (TimeKeeper.Warning("RakNet: Server.OnDisconnected: timed out", 20D))
-                    {
-                        ConnectionDisconnect(connection, "Timed Out");
-                    }
-
+                    ConnectionDisconnect(connection, "Timed Out");
                     return true;
                 }
 
                 if (connection != null)
                 {
-                    //using (TimeKeeper.Warning("RakNet: Server.OnDisconnected: disconnected", 20D))
-                    {
-                        ConnectionDisconnect(connection, connection.DisconnectReason);
-                    }
+                    ConnectionDisconnect(connection, connection.DisconnectReason);
                 }
 
                 return true;
@@ -323,7 +327,7 @@ namespace StolenNetwork
 
             if (connection == null)
             {
-                connection = new Connection();
+                connection = new Connection(this);
                 connection.Guid = _peer.GetPacketGUID();
                 connection.Address = _peer.GetPacketAddress();
                 connection.Port = _peer.GetPacketPort();
@@ -332,10 +336,7 @@ namespace StolenNetwork
                 if (string.IsNullOrEmpty(connection.Address) || connection.Address == "UNASSIGNED_SYSTEM_ADDRESS")
                     return true;
 
-                //using (TimeKeeper.Warning("RakNet: Server.CreateConnection", 20D))
-                {
-                    AddConnection(connection);
-                }
+                AddConnection(connection);
 
 	            if (Writer.Start((byte) StolenPacketType.Handshake))
 	            {
@@ -346,14 +347,13 @@ namespace StolenNetwork
 	            }
 	            else
 	            {
-		            throw new Exception("TODO");
+		            throw new Exception("[STOLEN SERVER] TODO: Write.");
 	            }
 
 	            return true;
             }
-
-            // Тут мы ловим другие доступные пакеты RakNet.
-            return false;
+            
+            return true;
         }
 
 	    private bool ProcessStolenPacket(byte packetId, Connection connection, PacketReader reader)
@@ -376,7 +376,7 @@ namespace StolenNetwork
 		    {
 			    connection.DisconnectReason = reader.String();
 
-			    return true;
+		        return true;
 		    }
 			
 		    return true;

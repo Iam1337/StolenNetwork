@@ -12,11 +12,6 @@ namespace StolenNetwork.Debug
 
         #region Public Methods
 
-        public void Tick()
-	    {
-
-	    }
-
 		public void PacketProcess(Packet packet)
 		{
 			if (packet.Type == (byte)PacketType.Ping)

@@ -32,15 +32,19 @@ namespace StolenNetwork
 
         #region Public Vars
 
+        public Action<string> OnLog;
+
+        public Action OnTickDrop;
+
         public string Host { get; private set; }
 
 	    public ushort Port { get; private set; }
 
 	    public Connection Connection { get; private set; }
 
-	    public IHandler CallbackHandler;
+	    public IHandler CallbackHandler { get; }
 
-	    public static string DisconnectReason;
+	    public static string DisconnectReason { get; private set; }
 
         #endregion
 
@@ -53,6 +57,11 @@ namespace StolenNetwork
         #endregion
 
 	    #region Public Methods
+
+        public Client(IHandler callbackHandler)
+        {
+            CallbackHandler = callbackHandler;
+        }
 
 	    // CONECTING/DISCONECTING
 	    public virtual bool Connect(string host, ushort port)
@@ -71,7 +80,7 @@ namespace StolenNetwork
 	            Writer = new PacketWriter(_peer, this);
 	            Reader = new PacketReader(_peer, this);
 
-	            Connection = new Connection();
+	            Connection = new Connection(this);
 	            Connection.State = ConnectionState.Unconnected;
 	            Connection.IsConnected = false;
 
@@ -97,34 +106,28 @@ namespace StolenNetwork
             if (_peer == null)
                 return;
 
-            //using (TimeKeeper.Warning(_clientTickWarning, 20D))
+            _tickTimer.Reset();
+            _tickTimer.Start();
+
+            while (_peer.IsReceived())
             {
-                _tickTimer.Reset();
-                _tickTimer.Start();
+                //using (TimeKeeper.Warning(_clientProcessMessageWarning, 20D))
+                //{
+                    ProcessPacket();
+                //}
 
-                while (_peer.IsReceived())
+                var totalMilliseconds = _tickTimer.Elapsed.TotalMilliseconds;
+                if (totalMilliseconds > MaxReceiveTime || !IsConnected())
                 {
-                    //using (TimeKeeper.Warning(_clientProcessMessageWarning, 20D))
-                    {
-                        ProcessPacket();
-                    }
+                    if (OnTickDrop != null)
+                        OnTickDrop.Invoke();
 
-                    var totalMilliseconds = _tickTimer.Elapsed.TotalMilliseconds;
-                    if (totalMilliseconds > MaxReceiveTime || !IsConnected())
-                    {
-                        /*
-						Debug.Log($"[CLIENT RAKNET] Drop interval: {Time.frameCount - _dropFrame} frames, {Time.time - _dropTime} sec.");
-
-						_dropTime = Time.time;
-						_dropFrame = Time.frameCount;
-						*/
-                        break;
-                    }
+                    break;
                 }
             }
         }
 
-	    // PING
+        // PING
         public int GetAveragePing()
         {
             return Connection == null ? 1 : _peer.GetConnectionAveragePing(Connection.Guid);
@@ -157,10 +160,8 @@ namespace StolenNetwork
                                            PacketPriority.Immediate));
             }
 
-            //using (TimeKeeper.Warning("RakNet: Client.Disconnect", 20D))
-            {
-                Peer.Destroy(ref _peer);
-            }
+            if (OnLog != null)
+                OnLog.Invoke($"[STOLEN CLIENT] Client Disconnect: {reason}");
 
             Writer.Dispose();
             Writer = null;
@@ -174,6 +175,8 @@ namespace StolenNetwork
 
             if (CallbackHandler != null)
                 CallbackHandler.ClientDisconnected(disconnectType, reason);
+
+            Peer.Destroy(ref _peer);
         }
 
         #endregion
@@ -208,16 +211,15 @@ namespace StolenNetwork
 		    try
 		    {
 			    //using (TimeKeeper.Warning(_clientProcessMessageWarning, 20D))
-			    {
+			    //{
 				    if (CallbackHandler != null)
 					    CallbackHandler.PacketProcess(packet);
-			    }
+			    //}
 		    }
 		    catch (Exception exception)
 		    {
 			    Disconnect(exception.Message + "\n" + exception.StackTrace, true);
-
-			    throw;
+                throw;
 		    }
 
 		    ReleasePacket(ref packet);
@@ -228,14 +230,9 @@ namespace StolenNetwork
             if (packetId >= (byte)RakPacketType.NUMBER_OF_TYPES)
                 return false;
 
-            //if (IsDemoPlaying)
-            //    return true;
-
             var packetType = (RakPacketType)packetId;
             if (packetType == RakPacketType.CONNECTION_REQUEST_ACCEPTED)
             {
-                //connectionAccepted = true;
-
                 if (Connection.Guid != 0)
 					throw new Exception($"[STOLEN CLIENT] Multiple PacketType.CONNECTION_REQUEST_ACCEPTED.");
 
@@ -290,7 +287,7 @@ namespace StolenNetwork
 				throw new Exception($"[STOLEN CLIENT] Unhandled Raknet packet {packetId} from unknown source {_peer.GetPacketAddress()}");
             }
 
-			//TODO: Тут я сделал возврат False, если я все же хочу видеть все пакеты раковые.
+            //TODO: Тут я сделал возврат False, если я все же хочу видеть все пакеты раковые.
             // TODO: Debug.LogWarning("[CLIENT RAKNET] Unhandled Raknet packet " + packetId);
             return true;
         }
@@ -327,7 +324,6 @@ namespace StolenNetwork
 			    return true;
 		    }
 
-			// TODO: Process stolen packets.
 			return true;
 	    }
 

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 
 namespace StolenNetwork.Debug
 {
@@ -20,16 +19,14 @@ namespace StolenNetwork.Debug
             var serverHandler = new ServerHandler();
 	        serverHandler.ServerName = "BIP Server";
 			
-	        _server = new Server();
-	        _server.CallbackHandler = serverHandler;
+	        _server = new Server(serverHandler);
             _server.Start("127.0.0.1", 7000, 20);
 
             // CLIENT
             var clientHandler = new ClientHandler();
 	        clientHandler.Username = "BUP Client";
 
-            _client = new Client();
-			_client.CallbackHandler = clientHandler;
+            _client = new Client(clientHandler);
 	        _client.Connect("127.0.0.1", 7000);
 			
 	        while (true)
@@ -48,7 +45,6 @@ namespace StolenNetwork.Debug
 
 				Thread.Sleep(500);
 	        }
-			
         }
     }
 }
