@@ -150,14 +150,14 @@ namespace StolenNetwork
             }
         }
 
-        public void PacketBroadcast(PacketPriority priority, PacketReliability reliability, byte channel)
+        public int PacketBroadcast(PacketPriority priority, PacketReliability reliability, byte channel)
         {
-	        Native.PACKET_SendPacketBroadcast(_peerPointer, priority, reliability, channel);
+	        return Native.PACKET_SendPacketBroadcast(_peerPointer, priority, reliability, channel);
         }
 
-        public void PacketSend(ulong guid, PacketPriority priority, PacketReliability reliability, byte channel)
+        public int PacketSend(ulong guid, PacketPriority priority, PacketReliability reliability, byte channel)
         {
-	        Native.PACKET_SendPacketUnicast(_peerPointer, guid, priority, reliability, channel);
+	        return Native.PACKET_SendPacketUnicast(_peerPointer, guid, priority, reliability, channel);
         }
 
         // SHARED
