@@ -65,15 +65,14 @@ namespace StolenNetwork
 		    return true;
 	    }
 
-        public void Send(PacketInfo info)
+        public uint Send(PacketInfo info)
         {
             if (info.Broadcast)
             {
                 _peer.PacketStart();
                 _peer.PacketWrite(_stream);
-                _peer.PacketBroadcast(info.Priority, info.Reliability, (byte)info.Channel);
 
-                return;
+	            return _peer.PacketBroadcast(info.Priority, info.Reliability, (byte)info.Channel);
             }
 
             if (info.Connections != null)
@@ -84,16 +83,22 @@ namespace StolenNetwork
 
                     _peer.PacketStart();
                     _peer.PacketWrite(_stream);
+
                     _peer.PacketSend(connection.Guid, info.Priority, info.Reliability, (byte)info.Channel);
                 }
+
+	            return 0;
             }
 
             if (info.Connection != null)
             {
                 _peer.PacketStart();
                 _peer.PacketWrite(_stream);
-                _peer.PacketSend(info.Connection.Guid, info.Priority, info.Reliability, (byte)info.Channel);
+
+                return _peer.PacketSend(info.Connection.Guid, info.Priority, info.Reliability, (byte)info.Channel);
             }
+
+	        return 0;
         }
 
         public void PacketId(byte packetId)

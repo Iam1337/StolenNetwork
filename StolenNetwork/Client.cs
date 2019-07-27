@@ -18,9 +18,13 @@ namespace StolenNetwork
 	        void ClientConnected(PacketReader reader, PacketWriter writer);
 
             void ClientDisconnected(DisconnectType disconnectType, string reason);
-			
-		    #endregion
-	    }
+
+	        void SendedPacketAcked(uint packetId);
+
+	        void SendedPacketLoss(uint packetId);
+
+            #endregion
+        }
 
         #endregion
 
@@ -189,7 +193,7 @@ namespace StolenNetwork
 
 		    var packetId = Reader.PacketId();
 
-		    if (ProcessRakNetPacket(packetId))
+		    if (ProcessRakNetPacket(packetId, Reader))
 			    return;
 
 		    if (Connection == null)
@@ -225,12 +229,22 @@ namespace StolenNetwork
 		    ReleasePacket(ref packet);
 	    }
 
-	    protected bool ProcessRakNetPacket(byte packetId)
+	    protected bool ProcessRakNetPacket(byte packetId, PacketReader reader)
         {
             if (packetId >= (byte)RakPacketType.NUMBER_OF_TYPES)
                 return false;
 
             var packetType = (RakPacketType)packetId;
+	        if (packetType == RakPacketType.SND_RECEIPT_ACKED)
+	        {
+		        if (CallbackHandler != null)
+			        CallbackHandler.SendedPacketAcked(reader.UInt32());
+	        }
+	        else if (packetType == RakPacketType.SND_RECEIPT_LOSS)
+	        {
+		        if (CallbackHandler != null)
+			        CallbackHandler.SendedPacketLoss(reader.UInt32());
+	        }
             if (packetType == RakPacketType.CONNECTION_REQUEST_ACCEPTED)
             {
                 if (Connection.Guid != 0)

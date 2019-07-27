@@ -60,10 +60,10 @@ namespace StolenNetwork
         public static extern unsafe void PACKET_WriteBytes(IntPtr peer, byte* bytes, uint size);
 
         [DllImport("RakNetDLL")]
-        public static extern int PACKET_SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel);
+        public static extern uint PACKET_SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel);
 
         [DllImport("RakNetDLL")]
-        public static extern int PACKET_SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel);
+        public static extern uint PACKET_SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel);
 
 
         // SHARED

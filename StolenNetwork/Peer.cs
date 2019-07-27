@@ -150,12 +150,12 @@ namespace StolenNetwork
             }
         }
 
-        public int PacketBroadcast(PacketPriority priority, PacketReliability reliability, byte channel)
+        public uint PacketBroadcast(PacketPriority priority, PacketReliability reliability, byte channel)
         {
 	        return Native.PACKET_SendPacketBroadcast(_peerPointer, priority, reliability, channel);
         }
 
-        public int PacketSend(ulong guid, PacketPriority priority, PacketReliability reliability, byte channel)
+        public uint PacketSend(ulong guid, PacketPriority priority, PacketReliability reliability, byte channel)
         {
 	        return Native.PACKET_SendPacketUnicast(_peerPointer, guid, priority, reliability, channel);
         }

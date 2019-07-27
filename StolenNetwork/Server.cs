@@ -20,18 +20,26 @@ namespace StolenNetwork
 
         #region Extensions
 
-        public interface IHandler
-        {
-            void PacketProcess(Packet packet);
+	    public interface IHandler
+	    {
+		    #region Methods
 
-            void ClientConnecting(Connection connection, PacketWriter writer);
+		    void PacketProcess(Packet packet);
 
-	        void ClientConnected(Connection connection, PacketReader reader);
+		    void ClientConnecting(Connection connection, PacketWriter writer);
 
-            void ClientDisconnected(Connection connection, string reason);
-        }
+		    void ClientConnected(Connection connection, PacketReader reader);
 
-        #endregion
+		    void ClientDisconnected(Connection connection, string reason);
+
+		    void SendedPacketAcked(uint packetId);
+
+		    void SendedPacketLoss(uint packetId);
+
+		    #endregion
+	    }
+
+	    #endregion
 
         #region Public Vars
 
@@ -277,7 +285,7 @@ namespace StolenNetwork
 
             var packetId = Reader.PacketId();
 
-            if (ProcessRakNetPacket(packetId, connection))
+            if (ProcessRakNetPacket(packetId, connection, Reader))
                 return;
 
             if (ProcessStolenPacket(packetId, connection, Reader))
@@ -297,16 +305,26 @@ namespace StolenNetwork
 
         private void ProcessUnconnectedMessage()
         {
-            ProcessRakNetPacket(Reader.PacketId(), null);
+            ProcessRakNetPacket(Reader.PacketId(), null, Reader);
         }
 
-        private bool ProcessRakNetPacket(byte packetId, Connection connection)
+        private bool ProcessRakNetPacket(byte packetId, Connection connection, PacketReader reader)
         {
             if (packetId >= (byte)RakPacketType.NUMBER_OF_TYPES)
                 return false;
 
-            var packetType = (RakPacketType)packetId;
-            if (packetType != RakPacketType.NEW_INCOMING_CONNECTION)
+			var packetType = (RakPacketType)packetId;
+	        if (packetType == RakPacketType.SND_RECEIPT_ACKED)
+	        {
+				if (CallbackHandler != null)
+					CallbackHandler.SendedPacketAcked(reader.UInt32());
+	        }
+			else if (packetType == RakPacketType.SND_RECEIPT_LOSS)
+	        {
+				if (CallbackHandler != null)
+					CallbackHandler.SendedPacketLoss(reader.UInt32());
+	        }
+	        else if (packetType != RakPacketType.NEW_INCOMING_CONNECTION)
             {
                 if (packetType != RakPacketType.DISCONNECTION_NOTIFICATION)
                 {

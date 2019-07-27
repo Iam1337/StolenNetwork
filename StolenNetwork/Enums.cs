@@ -52,15 +52,21 @@
     /// </summary>
     public enum PacketReliability : byte
     {
+	    Unreliable,
+
+	    UnreliableSequenced,
+
+	    ReliableUnordered,
+
         Reliable,
-
-        ReliableUnordered,
-
+		
         ReliableSequenced,
 
-        Unreliable,
+	    UnreliableAck,
 
-        UnreliableSequenced,
+        ReliableUnorderedAck,
+
+        ReliableAck,
     }
 
     /// <summary>

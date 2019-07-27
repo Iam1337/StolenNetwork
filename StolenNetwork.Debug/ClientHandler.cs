@@ -43,6 +43,16 @@ namespace StolenNetwork.Debug
 			Console.WriteLine($"[CLIENT] Disconnected: {disconnectType}:{reason}.");
         }
 
+		public void SendedPacketAcked(uint packetId)
+		{
+			Console.WriteLine($"[CLIENT] Packet Acked: {packetId}");
+        }
+
+		public void SendedPacketLoss(uint packetId)
+		{
+			Console.WriteLine($"[CLIENT] Packet Loss: {packetId}");
+        }
+
 		#endregion
 	}
 }
