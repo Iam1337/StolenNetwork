@@ -30,11 +30,11 @@ namespace StolenNetwork
 
         #region Private Vars
 
-        private Network _network;
+        private readonly Network _network;
 
-        private Peer _peer;
+        private readonly Peer _peer;
 
-        private MemoryStream _stream;
+        private readonly MemoryStream _stream;
 
         #endregion
 

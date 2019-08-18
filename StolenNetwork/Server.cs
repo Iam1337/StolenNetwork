@@ -365,7 +365,7 @@ namespace StolenNetwork
 	            }
 	            else
 	            {
-		            throw new Exception("[STOLEN SERVER] TODO: Write.");
+		            throw new Exception("[STOLEN SERVER] Cannot start Handshake message in Server.ProcessConnectedPacket!");
 	            }
 
 	            return true;

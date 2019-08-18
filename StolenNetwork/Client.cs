@@ -213,13 +213,10 @@ namespace StolenNetwork
 		    var packet = CreatePacket(packetId, Connection);
 
 		    try
-		    {
-			    //using (TimeKeeper.Warning(_clientProcessMessageWarning, 20D))
-			    //{
-				    if (CallbackHandler != null)
-					    CallbackHandler.PacketProcess(packet);
-			    //}
-		    }
+            {
+                if (CallbackHandler != null)
+                    CallbackHandler.PacketProcess(packet);
+            }
 		    catch (Exception exception)
 		    {
 			    Disconnect(exception.Message + "\n" + exception.StackTrace, true);
@@ -239,12 +236,18 @@ namespace StolenNetwork
 	        {
 		        if (CallbackHandler != null)
 			        CallbackHandler.SendedPacketAcked(reader.UInt32());
-	        }
-	        else if (packetType == RakPacketType.SND_RECEIPT_LOSS)
-	        {
-		        if (CallbackHandler != null)
-			        CallbackHandler.SendedPacketLoss(reader.UInt32());
-	        }
+
+                return true;
+            }
+
+            if (packetType == RakPacketType.SND_RECEIPT_LOSS)
+            {
+                if (CallbackHandler != null)
+                    CallbackHandler.SendedPacketLoss(reader.UInt32());
+
+                return true;
+            }
+
             if (packetType == RakPacketType.CONNECTION_REQUEST_ACCEPTED)
             {
                 if (Connection.Guid != 0)
@@ -325,7 +328,7 @@ namespace StolenNetwork
 			    }
 			    else
 			    {
-				    throw new Exception("TODO");
+				    throw new Exception("[STOLEN CLIENT] Cannot start Handshake message in Client.ProcessStolenPacket!");
 			    }
 
 			    return true;

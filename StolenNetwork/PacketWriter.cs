@@ -10,7 +10,7 @@ namespace StolenNetwork
     {
         #region Static Public Vars
 
-        private static MemoryStream _buffer = new MemoryStream();
+        private static readonly MemoryStream _buffer = new MemoryStream();
 
         #endregion
 
@@ -27,11 +27,11 @@ namespace StolenNetwork
 
         #region Private Vars
 
-        private Network _network;
+        private readonly Network _network;
 
-        private Peer _peer;
+        private readonly Peer _peer;
 
-        private MemoryStream _stream;
+        private readonly MemoryStream _stream;
 
         #endregion
 
@@ -103,9 +103,8 @@ namespace StolenNetwork
 
         public void PacketId(byte packetId)
         {
-            // TODO: Create range.
-            if (packetId < (byte)RakPacketType.NUMBER_OF_TYPES)
-                throw new Exception($"[STOLEN WRITER] TODO: Ты не можешь использовать id меньше чем {(byte)RakPacketType.NUMBER_OF_TYPES}");
+            if (packetId < (byte) RakPacketType.NUMBER_OF_TYPES)
+                throw new Exception($"[STOLEN WRITER] Unable to use PacketId less than {(byte) RakPacketType.NUMBER_OF_TYPES}.");
 
             UInt8(packetId);
         }

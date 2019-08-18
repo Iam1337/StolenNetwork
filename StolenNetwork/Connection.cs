@@ -30,7 +30,7 @@ namespace StolenNetwork
 
         #region Private Vars
 
-        private Network _network;
+        private readonly Network _network;
 
         private readonly TimeAverageValue[] _packetStats;
 
@@ -46,14 +46,12 @@ namespace StolenNetwork
 
         public int GetAveragePing()
         {
-            var server = _network as Server;
-            if (server != null)
+            if (_network is Server server)
             {
                 return server.GetAveragePing(this);
             }
 
-            var client = _network as Client;
-            if (client != null)
+            if (_network is Client client)
             {
                 return client.GetAveragePing();
             }
@@ -63,14 +61,12 @@ namespace StolenNetwork
 
         public int GetLastPing()
         {
-            var server = _network as Server;
-            if (server != null)
+            if (_network is Server server)
             {
                 return server.GetLastPing(this);
             }
 
-            var client = _network as Client;
-            if (client != null)
+            if (_network is Client client)
             {
                 return client.GetLastPing();
             }
@@ -80,14 +76,12 @@ namespace StolenNetwork
 
         public int GetLowestPing()
         {
-            var server = _network as Server;
-            if (server != null)
+            if (_network is Server server)
             {
                 return server.GetLowestPing(this);
             }
 
-            var client = _network as Client;
-            if (client != null)
+            if (_network is Client client)
             {
                 return client.GetLowestPing();
             }
@@ -118,11 +112,6 @@ namespace StolenNetwork
         {
             return $"{Guid}/{Address}:{Port}/{State}";
         }
-
-        #endregion
-
-        #region Private Methods
-
 
         #endregion
     }
