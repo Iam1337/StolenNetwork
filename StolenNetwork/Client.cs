@@ -304,8 +304,6 @@ namespace StolenNetwork
 				throw new Exception($"[STOLEN CLIENT] Unhandled Raknet packet {packetId} from unknown source {_peer.GetPacketAddress()}");
             }
 
-            //TODO: Тут я сделал возврат False, если я все же хочу видеть все пакеты раковые.
-            // TODO: Debug.LogWarning("[CLIENT RAKNET] Unhandled Raknet packet " + packetId);
             return true;
         }
 
