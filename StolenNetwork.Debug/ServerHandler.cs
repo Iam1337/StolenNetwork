@@ -33,14 +33,14 @@ namespace StolenNetwork.Debug
 		{
 			writer.String(ServerName);
 
-			Console.WriteLine($"[SERVER] Client Connecting: {connection.Address}.");
+			Console.WriteLine($"[SERVER] Client Connecting: {connection.Address}:{connection.Port}");
         }
 
 		public void ClientConnected(Connection connection, PacketReader reader)
 		{
 			var userName = reader.String();
 
-			Console.WriteLine($"[SERVER] Client Connected: {connection.Address}:{userName}.");
+			Console.WriteLine($"[SERVER] Client Connected: address: {connection.Address}:{connection.Port}, name: {userName}");
         }
 
 		public void ClientDisconnected(Connection connection, string reason)

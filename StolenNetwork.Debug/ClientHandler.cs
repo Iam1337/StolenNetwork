@@ -24,7 +24,7 @@ namespace StolenNetwork.Debug
 
 		public void ClientConnecting()
 		{
-			Console.WriteLine($"[CLIENT] Connected!");
+			Console.WriteLine($"[CLIENT] Connecting!");
         }
 
 		public void ClientConnected(PacketReader reader, PacketWriter writer)
@@ -35,7 +35,7 @@ namespace StolenNetwork.Debug
 			// SET USER DATA 
 			writer.String(Username);
 
-			Console.WriteLine($"[CLIENT] ClientConnected to {serverName}.");
+			Console.WriteLine($"[CLIENT] Connected: name: {serverName}.");
         }
 
 		public void ClientDisconnected(DisconnectType disconnectType, string reason)
