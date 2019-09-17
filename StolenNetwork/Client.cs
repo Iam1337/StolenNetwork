@@ -68,7 +68,7 @@ namespace StolenNetwork
         }
 
 	    // CONECTING/DISCONECTING
-	    public virtual bool Connect(string host, ushort port)
+	    public virtual StartupResult Connect(string host, ushort port)
 	    {
 	        if (_peer != null)
 	            throw new Exception("[STOLEN CLIENT] Client is already running.");
@@ -77,7 +77,7 @@ namespace StolenNetwork
 		    Port = port;
 	        DisconnectReason = "Disconnected";
 
-            _peer = Peer.Client(host, port, 24, 200, 0);
+            var result = Peer.Client(host, port, 24, 200, 0, out _peer);
 
             if (_peer != null)
 	        {
@@ -87,11 +87,9 @@ namespace StolenNetwork
 	            Connection = new Connection(this);
 	            Connection.State = ConnectionState.Unconnected;
 	            Connection.IsConnected = false;
-
-	            return true;
-	        }
+			}
             
-		    return false;
+		    return result;
 	    }
 
 	    public virtual void Disconnect(string reason, bool sendReason)

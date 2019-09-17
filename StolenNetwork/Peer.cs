@@ -7,49 +7,45 @@ namespace StolenNetwork
     {
 	    #region Static Public Methods
 
-	    public static Peer Server(string host, ushort port, ushort connectionsCount)
-	    {
-		    var peerPointer = Native.PEER_CreateInstance();
-		    var result = Native.PEER_SetupServer(peerPointer, host, port, connectionsCount);
-		    if (result != 0)
-		    {
+		public static StartupResult Server(string host, ushort port, ushort connectionsCount, out Peer peer)
+		{
+			var peerPointer = Native.PEER_CreateInstance();
+			var setupResult = Native.PEER_SetupServer(peerPointer, host, port, connectionsCount);
+			if (setupResult != 0)
+			{
 				if (peerPointer != IntPtr.Zero)
-				    Native.PEER_DestroyInstance(peerPointer);
+					Native.PEER_DestroyInstance(peerPointer);
 
-				// TODO: Exceptions.
+				peer = null;
+			}
+			else
+			{
+				peer = new Peer {_peerPointer = peerPointer};
+			}
 
-				return null;
-		    }
+			return (StartupResult) setupResult;
+		}
 
-	        return new Peer { _peerPointer = peerPointer };
-        }
+		public static StartupResult Client(string host, ushort port, uint retries, uint retryDelay, uint timeout, out Peer peer)
+		{
+			var peerPointer = Native.PEER_CreateInstance();
+			var setupResult = Native.PEER_SetupClient(peerPointer, host, port, retries, retryDelay, timeout);
+			if (setupResult != 100)
+			{
+				if (peerPointer != IntPtr.Zero)
+					Native.PEER_DestroyInstance(peerPointer);
 
-	    public static Peer Client(string host, ushort port, uint retries, uint retryDelay, uint timeout)
-	    {
-		    var peerPointer = Native.PEER_CreateInstance();
-		    var result = Native.PEER_SetupClient(peerPointer, host, port, retries, retryDelay, timeout);
-		    if (result != 100)
-		    {
-			    if (peerPointer != IntPtr.Zero)
-				    Native.PEER_DestroyInstance(peerPointer);
+				peer = null;
+			}
+			else
+			{
+				peer = new Peer {_peerPointer = peerPointer};
+			}
 
-			    // TODO: Exceptions.
-                if (result < 100)
-			    {
+			return (StartupResult) setupResult;
+		}
 
-			    }
-			    else
-			    {
-				    
-			    }
-
-				return null;
-            }
-
-	        return new Peer { _peerPointer = peerPointer };
-        }
-
-        public static void Destroy(ref Peer peer)
+		public static void Destroy(ref Peer peer)
         {
             if (peer == null)
                 throw new ArgumentNullException(nameof(peer));

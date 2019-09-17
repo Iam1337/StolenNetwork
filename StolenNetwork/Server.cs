@@ -89,7 +89,7 @@ namespace StolenNetwork
         }
 
         // SETUP
-        public virtual bool Start(string host, ushort port, ushort connectionsCount)
+        public virtual StartupResult Start(string host, ushort port, ushort connectionsCount)
         {
             if (_peer != null)
                 throw new Exception("[STOLEN SERVER] Server is already running.");
@@ -98,17 +98,15 @@ namespace StolenNetwork
             Port = port;
             ConnectionsCount = connectionsCount;
 
-            _peer = Peer.Server(host, port, connectionsCount);
+            var result = Peer.Server(host, port, connectionsCount, out _peer);
 
             if (_peer != null)
             {
                 Writer = new PacketWriter(_peer, this);
                 Reader = new PacketReader(_peer, this);
+			}
 
-                return true;
-            }
-
-            return false;
+            return result;
         }
 
         public bool IsStarted()

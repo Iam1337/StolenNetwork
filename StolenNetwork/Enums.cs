@@ -46,8 +46,32 @@
     }
 
     // NATIVE
+	public enum StartupResult
+	{
+		// CLIENT & SERVER
+		Started,
+		AlreadyStarted,
+		InvalidSocketDescriptors,
+		InvalidMaxConnections,
+		SocketFamilyNotSupported,
+		SocketPortAlreadyInUse,
+		SocketFailedToBind,
+		SocketFailedTestSend,
+		PortCannotBeZero,
+		FailedToCreateNetworkThread,
+		CouldNotGenerateGuid,
+		StartupOtherFailure,
 
-    /// <summary>
+		// CLIENT ONLY
+		ConnectionAttemptStarted = 100,
+		InvalidParameter,
+		CannotResolveDomainName,
+		AlreadyConnectedToEndpoint,
+		ConnectionAttemptAlreadyInProgress,
+		SecurityInitializationFailed
+    }
+
+	/// <summary>
     /// Packet Reliability.
     /// </summary>
     public enum PacketReliability : byte

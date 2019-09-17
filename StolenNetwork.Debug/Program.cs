@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 
 namespace StolenNetwork.Debug
 {
@@ -20,14 +21,16 @@ namespace StolenNetwork.Debug
 			serverHandler.ServerName = "Server";
 
 			_server = new Server(serverHandler);
-			_server.Start("127.0.0.1", 7000, 20);
+			var serverResult = _server.Start("127.0.0.1", 7010, 20);
 
 			// CLIENT
 			var clientHandler = new ClientHandler();
 			clientHandler.Username = "Client";
 
 			_client = new Client(clientHandler);
-			_client.Connect("127.0.0.1", 7000);
+			var clientResult = _client.Connect("127.0.0.1", 7010);
+
+			Console.WriteLine($"Server: {serverResult}, Client: {clientResult}");
 
 			while (true)
 			{
