@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿/* Copyright (c) 2019 ExT (V.Sigalkin) */
+
+using System.Collections.Generic;
 
 namespace StolenNetwork
 {

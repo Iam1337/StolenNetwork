@@ -1,4 +1,6 @@
-﻿namespace StolenNetwork
+﻿/* Copyright (c) 2019 ExT (V.Sigalkin) */
+
+namespace StolenNetwork
 {
     public class Packet
     {

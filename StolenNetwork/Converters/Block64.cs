@@ -1,9 +1,11 @@
-﻿using System.Runtime.InteropServices;
+﻿/* Copyright (c) 2019 ExT (V.Sigalkin) */
+
+using System.Runtime.InteropServices;
 
 namespace StolenNetwork.Converters
 {
     [StructLayout(LayoutKind.Explicit)]
-    public struct Block64
+	internal struct Block64
     {
         #region Static Public Static
 

@@ -2,7 +2,15 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Configurations>Debug;Release;Release_Android;Release.Android</Configurations>
+    <Configurations>Debug;Release</Configurations>
+    <AssemblyName>StolenNetwork</AssemblyName>
+    <Authors>V. Sigalkin</Authors>
+    <Company>V. Sigalkin</Company>
+    <Product>StolenNetwork Library</Product>
+    <Description>Simple network library</Description>
+    <PackageProjectUrl>https://github.com/Iam1337/StolenNetwork</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Iam1337/StolenNetwork</RepositoryUrl>
+    <Copyright>Copyright (c) 2019 ExT (V.Sigalkin)</Copyright>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -13,12 +21,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PlatformTarget>x64</PlatformTarget>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release.Android|AnyCPU'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <PlatformTarget>x64</PlatformTarget>
-    <DefineConstants>TRACE;ANDROID;</DefineConstants>
   </PropertyGroup>
 
 </Project>

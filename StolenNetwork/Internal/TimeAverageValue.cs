@@ -1,8 +1,11 @@
-﻿using System;
+﻿/* Copyright (c) 2019 ExT (V.Sigalkin) */
+
+using System;
 
 namespace StolenNetwork.Internal
 {
-    public struct TimeAverageValue
+	// TODO: А надо?
+    internal struct TimeAverageValue
     {
         #region Public Vars
 

@@ -1,37 +1,37 @@
-﻿using System;
+﻿/* Copyright (c) 2019 ExT (V.Sigalkin) */
+
+using System;
 
 namespace StolenNetwork
 {
+	// TODO: Make internal.
     public static class Pool<T> where T : class, new()
     {
         #region Extensions
 
         private class Collection
         {
-            public T[] Buffer;
+            #region Public Vars
 
-            public Collection()
-            {
-                Reset();
-            }
+			public readonly T[] Buffer;
 
-            public long ItemsInStack { get; set; }
+			public long ItemsInStack;
 
-            public long ItemsInUse { get; set; }
+			public long ItemsInUse;
 
-            public long ItemsCreated { get; set; }
+			#endregion
 
-            public long ItemsTaken { get; set; }
+            #region Public Methods
 
-            public void Reset()
-            {
-                Buffer = new T[512];
-                ItemsInStack = 0;
-                ItemsInUse = 0;
-                ItemsCreated = 0;
-                ItemsTaken = 0;
-            }
-        }
+			public Collection()
+			{
+				Buffer = new T[512];
+				ItemsInStack = 0;
+				ItemsInUse = 0;
+			}
+
+            #endregion
+		}
 
         #endregion
 
@@ -53,13 +53,10 @@ namespace StolenNetwork
                 var @object = _collection.Buffer[_collection.ItemsInStack];
                 _collection.Buffer[_collection.ItemsInStack] = null;
 
-                ++_collection.ItemsTaken;
-
-                return @object;
+				return @object;
             }
 
-            ++_collection.ItemsCreated;
-            ++_collection.ItemsInUse;
+			++_collection.ItemsInUse;
 
             return Activator.CreateInstance<T>();
         }
