@@ -15,6 +15,8 @@ namespace StolenNetwork
 
         public bool IsConnected;
 
+		public byte Id;
+
         public ulong Guid;
 
         public string Address;
@@ -102,9 +104,13 @@ namespace StolenNetwork
         }
 
         public void Clean()
-        {
+		{
+			Id = 0;
             Guid = 0;
             Data = null;
+			Address = null;
+			State = ConnectionState.Unconnected;
+			Port = 0;
 
             for (var i = 0; i < _packetStats.Length; i++)
                 _packetStats[i].Reset();
@@ -112,7 +118,7 @@ namespace StolenNetwork
 
         public override string ToString()
         {
-            return $"{Guid}/{Address}:{Port}/{State}";
+            return $"{Id}/{Guid}/{Address}:{Port}/{State}";
         }
 
         #endregion

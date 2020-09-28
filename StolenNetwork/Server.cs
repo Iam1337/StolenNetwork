@@ -10,13 +10,13 @@ namespace StolenNetwork
     {
         #region Static Private Vars
 
-        private static readonly string _serverTickWarning = "[STOLEN SERVER] Server.Tick";
+        //private static readonly string _serverTickWarning = "[STOLEN SERVER] Server.Tick";
 
-        private static readonly string _serverProcessWarning = "[STOLEN SERVER] Server.ProcessMessage";
+        //private static readonly string _serverProcessWarning = "[STOLEN SERVER] Server.ProcessMessage";
 
-        private static readonly string _serverProcessConnectedWarning = "[STOLEN SERVER] Server.ProcessConnectedMessage";
+        //private static readonly string _serverProcessConnectedWarning = "[STOLEN SERVER] Server.ProcessConnectedMessage";
 
-        private static readonly string _serverProcessUnconnectedWarning = "[STOLEN SERVER] Server.ProcessUnconnectedMessage";
+        //private static readonly string _serverProcessUnconnectedWarning = "[STOLEN SERVER] Server.ProcessUnconnectedMessage";
 
         #endregion
 
@@ -73,13 +73,13 @@ namespace StolenNetwork
 
         private Peer _peer;
 
-        private Stopwatch _tickTimer = Stopwatch.StartNew();
+		private Queue<byte> _emptyConnectionIds;
 
-        private ushort _previousConnectionId;
+        private readonly Stopwatch _tickTimer = Stopwatch.StartNew();
+        
+        private readonly List<Connection> _connections = new List<Connection>();
 
-        private List<Connection> _connections = new List<Connection>();
-
-        private Dictionary<ulong, Connection> _connectionsGuids = new Dictionary<ulong, Connection>();
+        private readonly Dictionary<ulong, Connection> _connectionsGuids = new Dictionary<ulong, Connection>();
 
         #endregion
 
@@ -95,6 +95,11 @@ namespace StolenNetwork
         {
             if (_peer != null)
                 throw new Exception("[STOLEN SERVER] Server is already running.");
+
+			_emptyConnectionIds = new Queue<byte>(connectionsCount);
+
+			for (var index = 0; index < connectionsCount; ++index)
+				_emptyConnectionIds.Enqueue((byte)(index + 1));
 
             Host = host;
             Port = port;
@@ -235,6 +240,7 @@ namespace StolenNetwork
             if (connection == null)
                 return;
 
+			connection.Id = _emptyConnectionIds.Dequeue();
             connection.IsConnected = true;
             connection.ConnectionTime = DateTime.Now;
 
@@ -244,6 +250,7 @@ namespace StolenNetwork
 
         protected void RemoveConnection(Connection connection)
         {
+			_emptyConnectionIds.Enqueue(connection.Id);
             _connectionsGuids.Remove(connection.Guid);
             _connections.Remove(connection);
 

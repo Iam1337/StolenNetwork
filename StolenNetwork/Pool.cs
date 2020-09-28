@@ -4,8 +4,7 @@ using System;
 
 namespace StolenNetwork
 {
-	// TODO: Make internal.
-    public static class Pool<T> where T : class, new()
+    internal static class Pool<T> where T : class, new()
     {
         #region Extensions
 

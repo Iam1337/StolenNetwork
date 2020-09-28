@@ -70,7 +70,7 @@ namespace StolenNetwork
         }
 
 	    // CONECTING/DISCONECTING
-	    public virtual StartupResult Connect(string host, ushort port)
+	    public virtual StartupResult Connect(string host, ushort port, uint timeout = 0)
 	    {
 	        if (_peer != null)
 	            throw new Exception("[STOLEN CLIENT] Client is already running.");
@@ -79,7 +79,7 @@ namespace StolenNetwork
 		    Port = port;
 	        DisconnectReason = "Disconnected";
 
-            var result = Peer.Client(host, port, 24, 200, 0, out _peer);
+            var result = Peer.Client(host, port, 24, 200, timeout, out _peer);
 
             if (_peer != null)
 	        {
@@ -115,12 +115,9 @@ namespace StolenNetwork
 
             while (_peer.IsReceived())
             {
-                //using (TimeKeeper.Warning(_clientProcessMessageWarning, 20D))
-                //{
-                    ProcessPacket();
-                //}
+				ProcessPacket();
 
-                var totalMilliseconds = _tickTimer.Elapsed.TotalMilliseconds;
+				var totalMilliseconds = _tickTimer.Elapsed.TotalMilliseconds;
                 if (totalMilliseconds > MaxReceiveTime || !IsConnected())
                 {
                     if (OnTickDrop != null)
@@ -177,10 +174,10 @@ namespace StolenNetwork
             Port = 0;
             Connection = null;
 
-            if (CallbackHandler != null)
-                CallbackHandler.ClientDisconnected(disconnectType, reason);
-
             Peer.Destroy(ref _peer);
+
+			if (CallbackHandler != null)
+				CallbackHandler.ClientDisconnected(disconnectType, reason);
         }
 
         #endregion
