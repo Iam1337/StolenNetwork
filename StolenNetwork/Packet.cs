@@ -1,17 +1,17 @@
-﻿/* Copyright (c) 2019 ExT (V.Sigalkin) */
+﻿/* Copyright (c) 2020 ExT (V.Sigalkin) */
 
 namespace StolenNetwork
 {
-    public class Packet
+    public class Packet<TConnection> where TConnection : IConnection
     {
         #region Public Vars
 
         public byte Type;
 
-        public Network Network;
+		public TConnection Connection;
 
-        public Connection Connection;
-
+        public Network<TConnection> Network;
+        
         public PacketReader Reader => Network.Reader;
 
         public PacketWriter Writer => Network.Writer;

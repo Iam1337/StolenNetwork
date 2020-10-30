@@ -2,7 +2,7 @@
 
 namespace StolenNetwork.Debug
 {
-	public class ClientHandler : Client.IHandler
+	public class ClientHandler : Client<Connection>.IHandler
 	{
 		#region Public Vars
 
@@ -12,7 +12,7 @@ namespace StolenNetwork.Debug
 
         #region Public Methods
 
-		public void PacketProcess(Packet packet)
+		public void PacketProcess(Packet<Connection> packet)
 		{
 			if (packet.Type == (byte)PacketType.Ping)
 			{

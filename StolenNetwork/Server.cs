@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2019 ExT (V.Sigalkin) */
+﻿/* Copyright (c) 2020 ExT (V.Sigalkin) */
 
 using System;
 using System.Diagnostics;
@@ -6,33 +6,21 @@ using System.Collections.Generic;
 
 namespace StolenNetwork
 {
-    public class Server : Network
+    public class Server<TConnection> : Network<TConnection> where TConnection : IConnection, new()
     {
-        #region Static Private Vars
-
-        //private static readonly string _serverTickWarning = "[STOLEN SERVER] Server.Tick";
-
-        //private static readonly string _serverProcessWarning = "[STOLEN SERVER] Server.ProcessMessage";
-
-        //private static readonly string _serverProcessConnectedWarning = "[STOLEN SERVER] Server.ProcessConnectedMessage";
-
-        //private static readonly string _serverProcessUnconnectedWarning = "[STOLEN SERVER] Server.ProcessUnconnectedMessage";
-
-        #endregion
-
-        #region Extensions
+		#region Extensions
 
 	    public interface IHandler
 	    {
 		    #region Methods
 
-		    void PacketProcess(Packet packet);
+			void PacketProcess(Packet<TConnection> packet);
 
-		    void ClientConnecting(Connection connection, PacketWriter writer);
+		    void ClientConnecting(TConnection connection, PacketWriter writer);
 
-		    void ClientConnected(Connection connection, PacketReader reader);
+		    void ClientConnected(TConnection connection, PacketReader reader);
 
-		    void ClientDisconnected(Connection connection, string reason);
+		    void ClientDisconnected(TConnection connection, string reason);
 
 		    void SendedPacketAcked(uint packetId);
 
@@ -65,7 +53,7 @@ namespace StolenNetwork
 
         public IHandler CallbackHandler { get; }
 
-        public List<Connection> Connections => _connections;
+        public List<TConnection> Connections => _connections;
 
         #endregion
 
@@ -77,9 +65,9 @@ namespace StolenNetwork
 
         private readonly Stopwatch _tickTimer = Stopwatch.StartNew();
         
-        private readonly List<Connection> _connections = new List<Connection>();
+        private readonly List<TConnection> _connections = new List<TConnection>();
 
-        private readonly Dictionary<ulong, Connection> _connectionsGuids = new Dictionary<ulong, Connection>();
+        private readonly Dictionary<ulong, TConnection> _connectionsGuids = new Dictionary<ulong, TConnection>();
 
         #endregion
 
@@ -166,14 +154,14 @@ namespace StolenNetwork
         }
 
         // METHODS
-        public Connection GetConnection(ulong guid)
+        public TConnection GetConnection(ulong guid)
         {
             _connectionsGuids.TryGetValue(guid, out var connection);
 
             return connection;
         }
 
-        public void Kick(Connection connection, string reason)
+        public void Kick(TConnection connection, string reason)
         {
             if (_peer == null)
                 throw new Exception("[STOLEN SERVER] Server is not running.");
@@ -201,17 +189,17 @@ namespace StolenNetwork
         }
 
         // PING
-        public int GetAveragePing(Connection connection)
+        public int GetAveragePing(TConnection connection)
         {
             return _peer.GetConnectionAveragePing(connection.Guid);
         }
 
-        public int GetLastPing(Connection connection)
+        public int GetLastPing(TConnection connection)
         {
             return _peer.GetConnectionLastPing(connection.Guid);
         }
 
-        public int GetLowestPing(Connection connection)
+        public int GetLowestPing(TConnection connection)
         {
             return _peer.GetConnectionLowestPing(connection.Guid);
         }
@@ -221,7 +209,7 @@ namespace StolenNetwork
         #region Protected Methods
 
         // CONNECTIONS
-        protected void ConnectionDisconnect(Connection connection, string reason)
+        protected void ConnectionDisconnect(TConnection connection, string reason)
         {
             if (connection == null)
                 return;
@@ -235,7 +223,7 @@ namespace StolenNetwork
             RemoveConnection(connection);
         }
 
-        protected void AddConnection(Connection connection)
+        protected void AddConnection(TConnection connection)
         {
             if (connection == null)
                 return;
@@ -248,14 +236,12 @@ namespace StolenNetwork
             _connectionsGuids.Add(connection.Guid, connection);
         }
 
-        protected void RemoveConnection(Connection connection)
+        protected void RemoveConnection(TConnection connection)
         {
 			_emptyConnectionIds.Enqueue(connection.Id);
             _connectionsGuids.Remove(connection.Guid);
             _connections.Remove(connection);
-
-            connection.Clean();
-        }
+		}
 
         #endregion
 
@@ -278,17 +264,17 @@ namespace StolenNetwork
             }
         }
 
-        private void ProcessConnectedPacket(Connection connection)
+        private void ProcessConnectedPacket(TConnection connection)
         {
-            if (connection.GetPacketPerSecond() >= MaxPacketsPerSecond)
-            {
-                Kick(connection, "Packet Flooding");
+            //if (connection.GetPacketPerSecond() >= MaxPacketsPerSecond)
+            //{
+            //    Kick(connection, "Packet Flooding");
 
-                if (OnLog != null)
-                    OnLog.Invoke($"[STOLEN SERVER] {connection} was kicked for packet flooding.");
+            //    if (OnLog != null)
+            //        OnLog.Invoke($"[STOLEN SERVER] {connection} was kicked for packet flooding.");
 
-                return;
-            }
+            //    return;
+            //}
 
             var packetId = Reader.PacketId();
 
@@ -301,8 +287,8 @@ namespace StolenNetwork
             // Process packet.
             var packet = CreatePacket(packetId, connection);
 
-            connection.AddPacketStats();
-            connection.AddPacketStats(packetId);
+            //connection.AddPacketStats();
+            //connection.AddPacketStats(packetId);
 
             if (CallbackHandler != null)
                 CallbackHandler.PacketProcess(packet);
@@ -312,10 +298,10 @@ namespace StolenNetwork
 
         private void ProcessUnconnectedMessage()
         {
-            ProcessRakNetPacket(Reader.PacketId(), null, Reader);
+            ProcessRakNetPacket(Reader.PacketId(), default, Reader);
         }
 
-        private bool ProcessRakNetPacket(byte packetId, Connection connection, PacketReader reader)
+        private bool ProcessRakNetPacket(byte packetId, TConnection connection, PacketReader reader)
         {
             if (packetId >= (byte)RakPacketType.NUMBER_OF_TYPES)
                 return false;
@@ -352,7 +338,7 @@ namespace StolenNetwork
 
             if (connection == null)
             {
-                connection = new Connection(this);
+                connection = new TConnection();
                 connection.Guid = _peer.GetPacketGUID();
                 connection.Address = _peer.GetPacketAddress();
                 connection.Port = _peer.GetPacketPort();
@@ -381,7 +367,7 @@ namespace StolenNetwork
             return true;
         }
 
-	    private bool ProcessStolenPacket(byte packetId, Connection connection, PacketReader reader)
+	    private bool ProcessStolenPacket(byte packetId, TConnection connection, PacketReader reader)
 	    {
 		    if (packetId >= (byte)StolenPacketType.NUMBER_OF_TYPES)
 			    return false;

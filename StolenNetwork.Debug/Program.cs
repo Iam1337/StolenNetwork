@@ -10,9 +10,9 @@ namespace StolenNetwork.Debug
 
 	public class Program
 	{
-		private static Server _server;
+		private static Server<Connection> _server;
 
-		private static Client _client;
+		private static Client<Connection> _client;
 
 		static void Main(string[] args)
 		{
@@ -20,14 +20,14 @@ namespace StolenNetwork.Debug
 			var serverHandler = new ServerHandler();
 			serverHandler.ServerName = "Server";
 
-			_server = new Server(serverHandler);
+			_server = new Server<Connection>(serverHandler);
 			var serverResult = _server.Start("127.0.0.1", 7010, 20);
 
 			// CLIENT
 			var clientHandler = new ClientHandler();
 			clientHandler.Username = "Client";
 
-			_client = new Client(clientHandler);
+			_client = new Client<Connection>(clientHandler);
 			var clientResult = _client.Connect("127.0.0.1", 7010);
 
 			Console.WriteLine($"Server: {serverResult}, Client: {clientResult}");

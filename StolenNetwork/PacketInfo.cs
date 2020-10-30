@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2019 ExT (V.Sigalkin) */
+﻿/* Copyright (c) 2020 ExT (V.Sigalkin) */
 
 using System.Collections.Generic;
 
@@ -28,19 +28,19 @@ namespace StolenNetwork
         ///
         /// Одновременно можно задать либо один Connection, либо один Connections.
         /// </summary>
-        public Connection Connection;
+        public IConnection Connection;
 
         /// <summary>
         /// Список получателей сообщения.
         ///
         /// Одновременно можно задать либо один Connection, либо один Connections.
         /// </summary>
-        public IEnumerable<Connection> Connections;
+        public IEnumerable<IConnection> Connections;
 
         /// <summary>
         /// Исключенный получатель. Используется для оптимизации.
         /// </summary>
-        public Connection ExcludeConnection;
+        public IConnection ExcludeConnection;
 
         /// <summary>
         /// Массовая рассылка всем соединениями.
@@ -61,11 +61,11 @@ namespace StolenNetwork
             Reliability = reliability;
             Priority = priority;
             Connections = null;
-            Connection = null;
-            ExcludeConnection = null;
+            Connection = default;
+            ExcludeConnection = default;
         }
 
-        public PacketInfo(IEnumerable<Connection> connections,
+        public PacketInfo(IEnumerable<IConnection> connections,
                           PacketReliability reliability = PacketReliability.Reliable,
                           PacketPriority priority = PacketPriority.Medium,
                           byte channel = 0)
@@ -75,12 +75,12 @@ namespace StolenNetwork
             Reliability = reliability;
             Priority = priority;
             Connections = connections;
-            Connection = null;
-            ExcludeConnection = null;
+            Connection = default;
+            ExcludeConnection = default;
         }
 
-        public PacketInfo(IEnumerable<Connection> connections,
-                          Connection excludeConnection,
+        public PacketInfo(IEnumerable<IConnection> connections,
+						  IConnection excludeConnection,
                           PacketReliability reliability = PacketReliability.Reliable,
                           PacketPriority priority = PacketPriority.Medium,
                           byte channel = 0)
@@ -90,14 +90,14 @@ namespace StolenNetwork
             Reliability = reliability;
             Priority = priority;
             Connections = connections;
-            Connection = null;
+            Connection = default;
             ExcludeConnection = excludeConnection;
         }
 
-        public PacketInfo(Connection connection,
-                          PacketReliability reliability = PacketReliability.Reliable,
-                          PacketPriority priority = PacketPriority.Medium,
-                          byte channel = 0)
+        public PacketInfo(IConnection connection,
+						  PacketReliability reliability = PacketReliability.Reliable,
+						  PacketPriority priority = PacketPriority.Medium,
+						  byte channel = 0)
         {
             Broadcast = false;
             Channel = channel;
