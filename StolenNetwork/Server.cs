@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2020 ExT (V.Sigalkin) */
+﻿/* Copyright (c) 2021 ExT (V.Sigalkin) */
 
 using System;
 using System.Diagnostics;
@@ -53,7 +53,7 @@ namespace StolenNetwork
 
         public IHandler CallbackHandler { get; }
 
-        public List<TConnection> Connections => _connections; // TODO: To ReadOnlyCollection
+        public List<TConnection> Connections => _connections; // TODO: ReadOnlyCollection
 
         #endregion
 
