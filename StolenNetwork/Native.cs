@@ -3,6 +3,7 @@
 using System;
 using System.Security;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 namespace StolenNetwork
 {
@@ -100,18 +101,13 @@ namespace StolenNetwork
 
 		#region Static Private Methods
 
-		public static string IntPtrToString(IntPtr pointer)
-		{
-			if (pointer == IntPtr.Zero)
-				return string.Empty;
-
-			return Marshal.PtrToStringAnsi(pointer);
-		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string IntPtrToString(IntPtr pointer) => pointer == IntPtr.Zero ? string.Empty : Marshal.PtrToStringAnsi(pointer);
 
 		#endregion
 	}
 
-	#region RakNet Statistins
+	#region RakNet Statistics
 
 	// STRUCTS
 	public enum StatisticsMetric

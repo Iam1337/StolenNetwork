@@ -12,11 +12,6 @@ namespace StolenNetwork.Debug
 
         #region Public Methods
 
-		public Connection CreateConnection()
-		{
-			return null;
-		}
-
 		public void PacketProcess(Packet<Connection> packet)
 		{
 			if (packet.Type == (byte) PacketType.Ping)

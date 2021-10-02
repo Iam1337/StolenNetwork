@@ -8,46 +8,34 @@ namespace StolenNetwork
     {
         #region Public Vars
 
-        /// <summary>
-        /// Надежность отправления.
-        /// </summary>
         public PacketReliability Reliability;
 
-        /// <summary>
-        /// Приоритет отправления.
-        /// </summary>
         public PacketPriority Priority;
 
-        /// <summary>
-        /// Канал надежности.
-        /// </summary>
         public byte Channel;
 
+		public bool Broadcast;
+
         /// <summary>
-        /// Единичный получатель сообщения.
+        /// Recipient of the message.
         ///
-        /// Одновременно можно задать либо один Connection, либо один Connections.
+        /// You can specify either one Connection or one Connections at a time.
         /// </summary>
         public IConnection Connection;
 
         /// <summary>
-        /// Список получателей сообщения.
+        /// List of message recipients. 
         ///
-        /// Одновременно можно задать либо один Connection, либо один Connections.
+        /// You can specify either one Connection or one Connections at a time. 
         /// </summary>
         public IEnumerable<IConnection> Connections;
 
         /// <summary>
-        /// Исключенный получатель. Используется для оптимизации.
+        /// Excluded recipient. Only while Connections is set.
         /// </summary>
         public IConnection ExcludeConnection;
 
-        /// <summary>
-        /// Массовая рассылка всем соединениями.
-        /// </summary>
-        public bool Broadcast;
-
-        #endregion
+		#endregion
 
         #region Public Methods
 

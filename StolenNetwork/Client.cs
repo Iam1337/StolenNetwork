@@ -298,7 +298,7 @@ namespace StolenNetwork
 
 			if (Connection != null && Connection.Guid != _peer.GetPacketGUID())
 			{
-				throw new Exception($"[STOLEN CLIENT] Unhandled Raknet packet {packetId} from unknown source {_peer.GetPacketAddress()}");
+				throw new Exception($"[STOLEN CLIENT] Unhandled RakNet packet {packetId} from unknown source {_peer.GetPacketAddress()}");
 			}
 
 			return true;

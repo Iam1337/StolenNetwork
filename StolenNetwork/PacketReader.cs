@@ -59,75 +59,33 @@ namespace StolenNetwork
 			return true;
 		}
 
-		public byte PacketId()
-		{
-			return UInt8();
-		}
+		public byte PacketId() => UInt8();
 
-		public byte UInt8()
-		{
-			return Unread >= Block8.Size ? ReadBlock8().Unsigned : (byte) 0;
-		}
+		public byte UInt8() => Unread >= Block8.Size ? ReadBlock8().Unsigned : (byte) 0;
 
-		public ushort UInt16()
-		{
-			return Unread >= Block16.Size ? ReadBlock16().Unsigned : (ushort) 0;
-		}
+		public ushort UInt16() => Unread >= Block16.Size ? ReadBlock16().Unsigned : (ushort) 0;
 
-		public uint UInt32()
-		{
-			return Unread >= Block32.Size ? ReadBlock32().Unsigned : 0;
-		}
+		public uint UInt32() => Unread >= Block32.Size ? ReadBlock32().Unsigned : 0;
 
-		public ulong UInt64()
-		{
-			return Unread >= Block64.Size ? ReadBlock64().Unsigned : 0;
-		}
+		public ulong UInt64() => Unread >= Block64.Size ? ReadBlock64().Unsigned : 0;
 
-		public sbyte Int8()
-		{
-			return Unread >= Block8.Size ? ReadBlock8().Signed : (sbyte) 0;
-		}
+		public sbyte Int8() => Unread >= Block8.Size ? ReadBlock8().Signed : (sbyte) 0;
 
-		public short Int16()
-		{
-			return Unread >= Block16.Size ? ReadBlock16().Signed : (short) 0;
-		}
+		public short Int16() => Unread >= Block16.Size ? ReadBlock16().Signed : (short) 0;
 
-		public int Int32()
-		{
-			return Unread >= Block32.Size ? ReadBlock32().Signed : 0;
-		}
+		public int Int32() => Unread >= Block32.Size ? ReadBlock32().Signed : 0;
 
-		public long Int64()
-		{
-			return Unread >= Block64.Size ? ReadBlock64().Signed : 0;
-		}
+		public long Int64() => Unread >= Block64.Size ? ReadBlock64().Signed : 0;
 
-		public bool Bool()
-		{
-			return Unread >= Block8.Size && _stream.ReadByte() != 0;
-		}
+		public bool Bool() => Unread >= Block8.Size && _stream.ReadByte() != 0;
 
-		public float Float()
-		{
-			return Unread >= Block32.Size ? ReadBlock32().Float : 0;
-		}
+		public float Float() => Unread >= Block32.Size ? ReadBlock32().Float : 0;
 
-		public double Double()
-		{
-			return Unread >= Block64.Size ? ReadBlock64().Float : 0;
-		}
+		public double Double() => Unread >= Block64.Size ? ReadBlock64().Float : 0;
 
-		public int Bytes(byte[] buffer, int offset, int count)
-		{
-			return _stream.Read(buffer, offset, count);
-		}
+		public int Bytes(byte[] buffer, int offset, int count) => _stream.Read(buffer, offset, count);
 
-		public long Seek(long offset, SeekOrigin origin)
-		{
-			return _stream.Seek(offset, origin);
-		}
+		public long Seek(long offset, SeekOrigin origin) => _stream.Seek(offset, origin);
 
 		public byte[] Bytes()
 		{
@@ -145,8 +103,7 @@ namespace StolenNetwork
 			var size = UInt32();
 			if (size == 0)
 				return null;
-
-			// Не более 10Мб.
+			
 			if (size > _network.MaxPacketSize)
 				return null;
 
@@ -168,10 +125,7 @@ namespace StolenNetwork
 			return Encoding.UTF8.GetString(memoryStream.GetBuffer(), 0, (int) memoryStream.Length);
 		}
 
-		public void Dispose()
-		{
-			_stream.Dispose();
-		}
+		public void Dispose() => _stream.Dispose();
 
 		#endregion
 
@@ -185,7 +139,6 @@ namespace StolenNetwork
 		private long CreateOffset(long offset)
 		{
 			var position = _stream.Position;
-
 			_stream.Position = position + offset;
 
 			return position;

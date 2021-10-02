@@ -17,10 +17,6 @@ namespace StolenNetwork
 
 		#endregion
 
-		#region Private Vars
-
-		#endregion
-
 		#region Protected Methods
 
 		protected Packet<TConnection> CreatePacket(byte packetType, TConnection connection)

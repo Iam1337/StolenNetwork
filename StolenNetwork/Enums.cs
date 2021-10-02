@@ -5,14 +5,10 @@ namespace StolenNetwork
     public enum StolenPacketType : byte
     {
 		Handshake = RakPacketType.NUMBER_OF_TYPES,
+		DisconnectReason,
 
         /// <summary>
-        /// Причина отключения.
-        /// </summary>
-        DisconnectReason,
-		
-        /// <summary>
-        /// Используйте это значение для своих типов.
+        /// For the user to use.  Start your first enumeration at this value.
         /// </summary>
         NUMBER_OF_TYPES
     }
@@ -23,11 +19,8 @@ namespace StolenNetwork
     public enum ConnectionState
     {
         Unconnected,
-
         Connecting,
-
         Connected,
-
         Disconnected
     }
     
@@ -37,14 +30,10 @@ namespace StolenNetwork
     public enum DisconnectType
     {
         CustomReason,
-
-        ConnectionFailed,
-
+		ConnectionFailed,
         FullServer,
-
         ConnectionLost,
-
-        ConnectionBanned
+		ConnectionBanned
     }
 
     // NATIVE
@@ -79,19 +68,12 @@ namespace StolenNetwork
     public enum PacketReliability : byte
     {
 	    Unreliable,
-
-	    UnreliableSequenced,
-
-	    ReliableUnordered,
-
+        UnreliableSequenced,
+        ReliableUnordered,
         Reliable,
-		
-        ReliableSequenced,
-
-	    UnreliableAck,
-
+		ReliableSequenced,
+        UnreliableAck,
         ReliableUnorderedAck,
-
         ReliableAck,
     }
 
@@ -101,28 +83,28 @@ namespace StolenNetwork
     public enum PacketPriority : byte
     {
         /// <summary>
-        /// Самый высокий приоритет. Сообщение не отправляется незамедлительно, оно так же не буферизуется и не агрегируется в одну датаграму.
+		/// The highest possible priority. These message trigger sends immediately, and are generally not buffered or aggregated into a single datagram.
         /// </summary>
         Immediate,
 
         /// <summary>
-        /// Сообщение высокого приоритета. На каждые два Immediate сообщение отправляется одно Hight.
+        /// For every 2 Immediate messages, 1 High will be sent.
         ///
-        /// Такие сообщения агрегируются в группы отправляемые каждые 10 милисекнуд.
+        /// Messages at Hight priority and lower are buffered to be sent in groups at 10 millisecond intervals.
         /// </summary>
         High,
 
         /// <summary>
-        /// Сообщение среднего приоритета. На каждые два High сообщение отправляется одно Medium.
+        /// For every 2 High messages, 1 Medium will be sent.
         ///
-        /// Такие сообщения агрегируются в группы отправляемые каждые 10 милисекнуд.
+        /// Messages at Hight priority and lower are buffered to be sent in groups at 10 millisecond intervals.
         /// </summary>
         Medium,
 
         /// <summary>
-        /// Сообщение низкого приоритета. На каждые два Medium сообщение отправляется одно Low.
+        /// For every 2 Medium messages, 1 Low will be sent.
         ///
-        /// Такие сообщения агрегируются в группы отправляемые каждые 10 милисекнуд.
+        /// Messages at Hight priority and lower are buffered to be sent in groups at 10 millisecond intervals.
         /// </summary>
         Low,
     }

@@ -112,65 +112,29 @@ namespace StolenNetwork
 			UInt8(packetId);
 		}
 
-		public void UInt8(byte value)
-		{
-			WriteBlock8(new Block8 {Unsigned = value});
-		}
+		public void UInt8(byte value) => WriteBlock8(new Block8 {Unsigned = value});
 
-		public void UInt16(ushort value)
-		{
-			WriteBlock16(new Block16 {Unsigned = value});
-		}
+		public void UInt16(ushort value) => WriteBlock16(new Block16 {Unsigned = value});
 
-		public void UInt32(uint value)
-		{
-			WriteBlock32(new Block32 {Unsigned = value});
-		}
+		public void UInt32(uint value) => WriteBlock32(new Block32 {Unsigned = value});
 
-		public void UInt64(ulong value)
-		{
-			WriteBlock64(new Block64 {Unsigned = value});
-		}
+		public void UInt64(ulong value) => WriteBlock64(new Block64 {Unsigned = value});
 
-		public void Int8(sbyte value)
-		{
-			WriteBlock8(new Block8 {Signed = value});
-		}
+		public void Int8(sbyte value) => WriteBlock8(new Block8 {Signed = value});
 
-		public void Int16(short value)
-		{
-			WriteBlock16(new Block16 {Signed = value});
-		}
+		public void Int16(short value) => WriteBlock16(new Block16 {Signed = value});
 
-		public void Int32(int value)
-		{
-			WriteBlock32(new Block32 {Signed = value});
-		}
+		public void Int32(int value) => WriteBlock32(new Block32 {Signed = value});
 
-		public void Int64(long value)
-		{
-			WriteBlock64(new Block64 {Signed = value});
-		}
+		public void Int64(long value) => WriteBlock64(new Block64 {Signed = value});
 
-		public void Bool(bool value)
-		{
-			_stream.WriteByte((byte) (value ? 1 : 0));
-		}
+		public void Bool(bool value) => _stream.WriteByte((byte) (value ? 1 : 0));
 
-		public void Float(float value)
-		{
-			WriteBlock32(new Block32 {Float = value});
-		}
+		public void Float(float value) => WriteBlock32(new Block32 {Float = value});
 
-		public void Double(double value)
-		{
-			WriteBlock64(new Block64 {Float = value});
-		}
+		public void Double(double value) => WriteBlock64(new Block64 {Float = value});
 
-		public void Bytes(byte[] buffer, int offset, int length)
-		{
-			_stream.Write(buffer, offset, length);
-		}
+		public void Bytes(byte[] buffer, int offset, int length) => _stream.Write(buffer, offset, length);
 
 		public void Bytes(byte[] buffer, int length)
 		{
@@ -243,10 +207,7 @@ namespace StolenNetwork
 			}
 		}
 
-		public void Dispose()
-		{
-			_stream.Dispose();
-		}
+		public void Dispose() => _stream.Dispose();
 
 		#endregion
 

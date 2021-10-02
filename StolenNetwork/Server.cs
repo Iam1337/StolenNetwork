@@ -53,7 +53,7 @@ namespace StolenNetwork
 
         public IHandler CallbackHandler { get; }
 
-        public List<TConnection> Connections => _connections;
+        public List<TConnection> Connections => _connections; // TODO: To ReadOnlyCollection
 
         #endregion
 
@@ -137,12 +137,9 @@ namespace StolenNetwork
 
             while (_peer.IsReceived())
             {
-                //using (TimeKeeper.Warning(_serverProcessWarning, 20D))
-                //{
-                ProcessPacket();
-                //}
+				ProcessPacket();
 
-                var totalMilliseconds = _tickTimer.Elapsed.TotalMilliseconds;
+				var totalMilliseconds = _tickTimer.Elapsed.TotalMilliseconds;
                 if (totalMilliseconds > MaxReceiveTime)
                 {
                     if (OnTickDrop != null)
@@ -286,9 +283,6 @@ namespace StolenNetwork
 
             // Process packet.
             var packet = CreatePacket(packetId, connection);
-
-            //connection.AddPacketStats();
-            //connection.AddPacketStats(packetId);
 
             if (CallbackHandler != null)
                 CallbackHandler.PacketProcess(packet);
