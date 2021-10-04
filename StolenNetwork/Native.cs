@@ -7,18 +7,17 @@ using System.Runtime.CompilerServices;
 
 namespace StolenNetwork
 {
+	// This part of project work with this CrabNet fork: https://github.com/iam1337/CrabNet
+
 	[SuppressUnmanagedCodeSecurity]
 	public static class Native
 	{
 		#region Constants
 
-#if ANDROID
-		private const string _libName = "libRakNet";
-#else
+		// TODO: Make Linux compability 
 		private const string _libName = "RakNet";
-#endif
 
-        #endregion
+		#endregion
 
         #region Externs
 
