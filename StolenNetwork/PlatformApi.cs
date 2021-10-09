@@ -49,56 +49,25 @@ namespace StolenNetwork
 
         #region Public Vars
 
+		public static bool IsWindows => _isWindows;
+
         public static bool IsLinux => _isLinux;
 
         public static bool IsMacOSX => _isOSX;
 
-        public static bool IsWindows => _isWindows;
+		public static bool IsMono => _isMono;
 
-        public static bool IsMono => _isMono;
-
-        /// <summary>
-        /// true if running on Unity platform.
-        /// </summary>
         public static bool IsUnity => _unityApplicationPlatform != null;
 
-        /// <summary>
-        /// true if running on Unity iOS, false otherwise.
-        /// </summary>
         public static bool IsUnityIOS => _unityApplicationPlatform == kUnity_IPhone_Player;
 
-        /// <summary>
-        /// true if running on a Xamarin platform (either Xamarin.Android or Xamarin.iOS),
-        /// false otherwise.
-        /// </summary>
         public static bool IsXamarin => _isXamarin;
 
-        /// <summary>
-        /// true if running on Xamarin.iOS, false otherwise.
-        /// </summary>
         public static bool IsXamarinIOS => _isXamarinIOS;
 
-        /// <summary>
-        /// true if running on Xamarin.Android, false otherwise.
-        /// </summary>
         public static bool IsXamarinAndroid => _isXamarinAndroid;
 
-        /// <summary>
-        /// true if running on .NET 5+, false otherwise.
-        /// </summary>
-        public static bool IsNet5OrHigher => _isNet5OrHigher;
-
-
-        /// <summary>
-        /// Contains the version of common language runtime obtained from <c>Environment.Version</c>
-        /// if the property is available on current TFM. <c>null</c> otherwise.
-        /// </summary>
-        public static string ClrVersion => _clrVersion;
-
-        /// <summary>
-        /// true if running on .NET Core (CoreCLR) or NET 5+, false otherwise.
-        /// </summary>
-        public static bool IsNetCore => _isNetCore;
+		public static bool IsNetCore => _isNetCore;
 
         public static bool Is64Bit => IntPtr.Size == 8;
 
@@ -135,27 +104,18 @@ namespace StolenNetwork
         static string TryGetUnityApplicationPlatform()
         {
 
-			Assembly unityAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assembly => assembly.GetName().Name == kUnityEngine_AssemblyName);
+			var unityAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assembly => assembly.GetName().Name == kUnityEngine_AssemblyName);
 			var applicationClass = unityAssembly?.GetType(kUnityEngine_Application_ClassName);
             var platformProperty = applicationClass?.GetTypeInfo().GetProperty("platform", BindingFlags.Static | BindingFlags.Public);
            
 			try
             {
-                // Consult value of Application.platform via reflection
-                // https://docs.unity3d.com/ScriptReference/Application-platform.html
+
                 return platformProperty?.GetValue(null)?.ToString();
             }
             catch (TargetInvocationException)
             {
-                // The getter for Application.platform is defined as "extern", so if UnityEngine assembly is loaded outside of a Unity application,
-                // the definition for the getter will be missing - note that this is a sneaky trick that helps us tell a real Unity application from a non-unity
-                // application which just happens to have loaded the UnityEngine.dll assembly.
-                // https://github.com/Unity-Technologies/UnityCsReference/blob/61f92bd79ae862c4465d35270f9d1d57befd1761/Runtime/Export/Application/Application.bindings.cs#L375
-                // See https://github.com/grpc/grpc/issues/23334
-
-                // If TargetInvocationException was thrown, it most likely means that the method definition for the extern method is missing,
-                // and we are going to interpret this as "not running on Unity".
-                return null;
+				return null;
             }
         }
 

@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <!-- Based on https://github.com/grpc/grpc/blob/master/src/csharp/Grpc.Core/Grpc.Core.csproj-->
 
   <!-- Setup Project Info-->
   <PropertyGroup> 
@@ -13,8 +12,6 @@
   <!-- Setup Project Settings -->
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <!--<GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>-->
   </PropertyGroup>
 
   <!-- Setup Unsafe -->
@@ -24,21 +21,20 @@
 
   <ItemGroup>
     <Content Include="..\Prebuild\RakNet.x64.dll">
-      <PackagePath>runtimes/win-x64/native/RakNet.x64.dll</PackagePath>
-      <Pack>true</Pack>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>RakNet.x64.dll</Link>
+      <Pack>false</Pack>
     </Content>
 
     <Content Include="..\Prebuild\RakNet.x86.dll">
-      <PackagePath>runtimes/win-x86/native/RakNet.x86.dll</PackagePath>
-      <Pack>true</Pack>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>RakNet.x86.dll</Link>
     </Content>
 
     <Content Include="..\Prebuild\libRakNet.x64.so">
-      <PackagePath>runtimes/linux-x64/native/libRakNet.x64.so</PackagePath>
-      <Pack>true</Pack>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>libRakNet.x64.so</Link>
     </Content>
   </ItemGroup>
-
-  <Import Project="NativeDeps.csproj.include" />
 
 </Project>

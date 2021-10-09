@@ -38,13 +38,7 @@ namespace StolenNetwork
 				return LoadXamarinBackend();
 			}
 
-			// Detect .NET5 single file app
-			if (PlatformApi.IsNet5OrHigher && GetAssemblyDirectory() == null)
-			{
-				return LoadSingleFileAppBackend();
-			}
-
-			return LoadUnmanagedBackend();
+			return LoadSingleFileAppBackend();
 		}
 
 		private static NativeBackend LoadUnityBackend()
@@ -61,7 +55,7 @@ namespace StolenNetwork
 
 		private static NativeBackend LoadXamarinBackend()
 		{
-			if (PlatformApi.IsXamarin)
+			if (PlatformApi.IsXamarinAndroid)
 			{
 				return new NativeBackend_SharedLib();
 			}
@@ -95,73 +89,18 @@ namespace StolenNetwork
 			throw new InvalidOperationException($"Unsupported architecture \"{PlatformApi.Architecture}\".");
 		}
 
-		private static NativeBackend LoadUnmanagedBackend()
-		{
-			// NOTE: a side effect of searching the native extension's library file relatively to the assembly location is that when Grpc.Core assembly
-			// is loaded via reflection from a different app's context, the native extension is still loaded correctly
-			// (while if we used [DllImport], the native extension won't be on the other app's search path for shared libraries).
-			var assemblyDirectory = GetAssemblyDirectory();
-
-			// With "classic" VS projects, the native libraries get copied using a .targets rule to the build output folder
-			// alongside the compiled assembly.
-			// With dotnet SDK projects targeting net45 framework, the native libraries (just the required ones)
-			// are similarly copied to the built output folder, through the magic of Microsoft.NETCore.Platforms.
-			var classicPath = Path.Combine(assemblyDirectory, GetNativeLibraryFilename());
-
-			// With dotnet SDK project targeting netcoreappX.Y, projects will use Grpc.Core assembly directly in the location where it got restored
-			// by nuget. We locate the native libraries based on known structure of Grpc.Core nuget package.
-			// When "dotnet publish" is used, the runtimes directory is copied next to the published assemblies.
-			var runtimesDirectory = $"runtimes/{GetRuntimeIdString()}/native";
-			var netCorePublishedAppStylePath = Path.Combine(assemblyDirectory, runtimesDirectory, GetNativeLibraryFilename());
-			var netCoreAppStylePath = Path.Combine(assemblyDirectory, "../..", runtimesDirectory, GetNativeLibraryFilename());
-
-			// Look for the native library in all possible locations in given order.
-			var paths = new[] { classicPath, netCorePublishedAppStylePath, netCoreAppStylePath };
-
-			// The UnmanagedLibrary mechanism for loading the native extension while avoiding
-			// direct use of DllImport is quite complicated but it is currently needed to ensure:
-			// 1.) the native extension is loaded eagerly (needed to avoid startup issues)
-			// 2.) less common scenarios (such as loading Grpc.Core.dll by reflection) still work
-			// 3.) loading native extension from an arbitrary location when set by an enviroment variable
-			return new NativeBackend_Unmanaged(paths);
-		}
 
 		private static string GetAssemblyDirectory()
 		{
 			var assembly = typeof(Native).GetTypeInfo().Assembly;
-
-			// Assembly.EscapedCodeBase does not exist under CoreCLR, but assemblies imported from a nuget package
-			// don't seem to be shadowed by DNX-based projects at all.
 			var assemblyLocation = assembly.Location;
+
 			if (string.IsNullOrEmpty(assemblyLocation))
 			{
-				// In .NET5 single-file deployments, assembly.Location won't be available
-				// and we can use it for detecting whether we are running as a single file app.
-				// Also see https://docs.microsoft.com/en-us/dotnet/core/deploying/single-file#other-considerations
 				return null;
 			}
 
 			return Path.GetDirectoryName(assemblyLocation);
-		}
-
-		private static string GetRuntimeIdString()
-		{
-			var architecture = GetArchitectureString();
-			
-			if (PlatformApi.IsWindows)
-			{
-				return $"win-{architecture}";
-			}
-			if (PlatformApi.IsLinux)
-			{
-				return $"linux-{architecture}";
-			}
-			if (PlatformApi.IsMacOSX)
-			{
-				return $"osx-{architecture}";
-			}
-			
-			throw new InvalidOperationException("Unsupported platform.");
 		}
 
 		private static string GetArchitectureString()
@@ -172,29 +111,6 @@ namespace StolenNetwork
 				case Architecture.X86: return "x86";
 				default:               throw new InvalidOperationException($"Unsupported architecture \"{PlatformApi.Architecture}\".");
 			}
-		}
-
-		// platform specific file name of the extension library
-		private static string GetNativeLibraryFilename()
-		{
-			var architecture = GetArchitectureString();
-
-			if (PlatformApi.IsWindows)
-			{
-				return $"RakNet.{architecture}.dll";
-			}
-
-			if (PlatformApi.IsLinux)
-			{
-				return $"libRakNet.{architecture}.so";
-			}
-
-			if (PlatformApi.IsMacOSX)
-			{
-				return $"libRakNet.{architecture}.dylib";
-			}
-
-			throw new InvalidOperationException("Unsupported platform.");
 		}
 
 		#endregion
@@ -224,8 +140,6 @@ namespace StolenNetwork
 
 		public static ulong PACKET_GetGUID(IntPtr peer) => _b._PACKET_GetGUID(peer);
 
-		//public static IntPtr PACKET_GetAddressPtr(IntPtr peer) => _b._PACKET_GetAddressPtr(peer);
-
 		public static string PACKET_GetAddress(IntPtr peer) => _b._PACKET_GetAddress(peer);
 
 		public static ushort PACKET_GetPort(IntPtr peer) => _b._PACKET_GetPort(peer);
@@ -244,8 +158,6 @@ namespace StolenNetwork
 
 		// SHARED
 		public static void PEER_GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics) => _b._PEER_GetStatistics(peer, guid, ref statistics);
-
-		//public static IntPtr PEER_GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel) => _b._PEER_GetStatisticsStringPtr(peer, guid, verbosityLevel);
 
 		public static string PEER_GetStatisticsString(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel) => _b._PEER_GetStatisticsString(peer, guid, verbosityLevel);
 
