@@ -1,35 +1,44 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Based on https://github.com/grpc/grpc/blob/master/src/csharp/Grpc.Core/Grpc.Core.csproj-->
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <Configurations>Debug;Release</Configurations>
-    <AssemblyName>StolenNetwork</AssemblyName>
+  <!-- Setup Project Info-->
+  <PropertyGroup> 
     <Authors>V. Sigalkin</Authors>
-    <Company>V. Sigalkin</Company>
-    <Product>StolenNetwork Library</Product>
+    <Copyright>Copyright (c) 2021 ExT (V.Sigalkin)</Copyright>
     <Description>Simple network library</Description>
     <PackageProjectUrl>https://github.com/Iam1337/StolenNetwork</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Iam1337/StolenNetwork</RepositoryUrl>
-    <Copyright>Copyright (c) 2019 ExT (V.Sigalkin)</Copyright>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <PlatformTarget>x64</PlatformTarget>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  <!-- Setup Project Settings -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <!--<GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>-->
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+  <!-- Setup Unsafe -->
+  <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Update="libRakNet.so">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="RakNet.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    <Content Include="..\Prebuild\RakNet.x64.dll">
+      <PackagePath>runtimes/win-x64/native/RakNet.x64.dll</PackagePath>
+      <Pack>true</Pack>
+    </Content>
+
+    <Content Include="..\Prebuild\RakNet.x86.dll">
+      <PackagePath>runtimes/win-x86/native/RakNet.x86.dll</PackagePath>
+      <Pack>true</Pack>
+    </Content>
+
+    <Content Include="..\Prebuild\libRakNet.x64.so">
+      <PackagePath>runtimes/linux-x64/native/libRakNet.x64.so</PackagePath>
+      <Pack>true</Pack>
+    </Content>
   </ItemGroup>
+
+  <Import Project="NativeDeps.csproj.include" />
 
 </Project>
