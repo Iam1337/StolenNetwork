@@ -1,4 +1,4 @@
-# extOSC - Open Sound Control Protocol for Unity
+# StolenNetwork - Simple Network Framework
 
 Created by [iam1337](https://github.com/iam1337)
 
