@@ -79,6 +79,133 @@ namespace StolenNetwork
 		#endregion
 	};
 
+	internal class NativeBackend_StaticLib : NativeBackend
+	{
+		#region Private Vars
+
+		private const string _libName = "__Internal";
+
+		#endregion
+
+		#region Public Methods
+
+		public override IntPtr _PEER_CreateInstance() => PEER_CreateInstance();
+
+		public override void _PEER_DestroyInstance(IntPtr peer) => PEER_DestroyInstance(peer);
+
+		public override int _PEER_SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections) => PEER_SetupServer(peer, serverHost, serverPort, maxConnections);
+
+		public override void _PEER_CloseConnection(IntPtr peer, ulong guid) => PEER_CloseConnection(peer, guid);
+
+		public override int _PEER_SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout) => PEER_SetupClient(peer, serverHost, serverPort, retries, retryDelay, timeout);
+
+		public override bool _PEER_Receive(IntPtr peer) => PEER_Receive(peer);
+
+		public override int _PACKET_GetLength(IntPtr peer) => PACKET_GetLength(peer);
+
+		public override ulong _PACKET_GetGUID(IntPtr peer) => PACKET_GetGUID(peer);
+
+		public override IntPtr _PACKET_GetAddressPtr(IntPtr peer) => PACKET_GetAddressPtr(peer);
+
+		public override ushort _PACKET_GetPort(IntPtr peer) => PACKET_GetPort(peer);
+
+		public override unsafe bool _PACKET_ReadBytes(IntPtr peer, byte* bytes) => PACKET_ReadBytes(peer, bytes);
+
+		public override void _PACKET_StartPacket(IntPtr peer) => PACKET_StartPacket(peer);
+
+		public override unsafe void _PACKET_WriteBytes(IntPtr peer, byte* bytes, uint size) => PACKET_WriteBytes(peer, bytes, size);
+
+		public override uint _PACKET_SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketUnicast(peer, guid, priority, reliability, channel);
+
+		public override uint _PACKET_SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketBroadcast(peer, priority, reliability, channel);
+
+		public override void _PEER_GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics) => PEER_GetStatistics(peer, guid, ref statistics);
+
+		public override IntPtr _PEER_GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel) => PEER_GetStatisticsStringPtr(peer, guid, verbosityLevel);
+
+		public override int _PEER_GetAveragePing(IntPtr peer, ulong guid) => PEER_GetAveragePing(peer, guid);
+
+		public override int _PEER_GetLastPing(IntPtr peer, ulong guid) => PEER_GetLastPing(peer, guid);
+
+		public override int _PEER_GetLowestPing(IntPtr peer, ulong guid) => PEER_GetLowestPing(peer, guid);
+
+		#endregion
+
+		#region Import Methods
+
+		[DllImport(_libName)]
+		private static extern IntPtr PEER_CreateInstance();
+
+		[DllImport(_libName)]
+		private static extern void PEER_DestroyInstance(IntPtr peer);
+
+
+		// SERVER
+		[DllImport(_libName)]
+		private static extern int PEER_SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections);
+
+		[DllImport(_libName)]
+		private static extern void PEER_CloseConnection(IntPtr peer, ulong guid);
+
+
+		// CLIENT
+		[DllImport(_libName)]
+		private static extern int PEER_SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout);
+
+
+		// RECEIVE
+		[DllImport(_libName)]
+		private static extern bool PEER_Receive(IntPtr peer);
+
+		[DllImport(_libName)]
+		private static extern int PACKET_GetLength(IntPtr peer);
+
+		[DllImport(_libName)]
+		private static extern ulong PACKET_GetGUID(IntPtr peer);
+
+		[DllImport(_libName)]
+		private static extern IntPtr PACKET_GetAddressPtr(IntPtr peer);
+
+		[DllImport(_libName)]
+		private static extern ushort PACKET_GetPort(IntPtr peer);
+
+		[DllImport(_libName)]
+		private static extern unsafe bool PACKET_ReadBytes(IntPtr peer, byte* bytes);
+
+
+		// SEND
+		[DllImport(_libName)]
+		private static extern void PACKET_StartPacket(IntPtr peer);
+
+		[DllImport(_libName)]
+		private static extern unsafe void PACKET_WriteBytes(IntPtr peer, byte* bytes, uint size);
+
+		[DllImport(_libName)]
+		private static extern uint PACKET_SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel);
+
+		[DllImport(_libName)]
+		private static extern uint PACKET_SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel);
+
+
+		// SHARED
+		[DllImport(_libName)]
+		private static extern void PEER_GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics);
+
+		[DllImport(_libName)]
+		private static extern IntPtr PEER_GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel);
+
+		[DllImport(_libName)]
+		private static extern int PEER_GetAveragePing(IntPtr peer, ulong guid);
+
+		[DllImport(_libName)]
+		private static extern int PEER_GetLastPing(IntPtr peer, ulong guid);
+
+		[DllImport(_libName)]
+		private static extern int PEER_GetLowestPing(IntPtr peer, ulong guid);
+
+		#endregion
+	}
+
 	internal class NativeBackend_SharedLib : NativeBackend
 	{
 		#region Private Vars

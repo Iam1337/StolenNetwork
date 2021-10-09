@@ -1,9 +1,7 @@
 ﻿/* Copyright (c) 2021 ExT (V.Sigalkin) */
 
 using System;
-using System.IO;
 using System.Security;
-using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace StolenNetwork
@@ -87,30 +85,6 @@ namespace StolenNetwork
 			}
 
 			throw new InvalidOperationException($"Unsupported architecture \"{PlatformApi.Architecture}\".");
-		}
-
-
-		private static string GetAssemblyDirectory()
-		{
-			var assembly = typeof(Native).GetTypeInfo().Assembly;
-			var assemblyLocation = assembly.Location;
-
-			if (string.IsNullOrEmpty(assemblyLocation))
-			{
-				return null;
-			}
-
-			return Path.GetDirectoryName(assemblyLocation);
-		}
-
-		private static string GetArchitectureString()
-		{
-			switch (PlatformApi.Architecture)
-			{
-				case Architecture.X64: return "x64";
-				case Architecture.X86: return "x86";
-				default:               throw new InvalidOperationException($"Unsupported architecture \"{PlatformApi.Architecture}\".");
-			}
 		}
 
 		#endregion
