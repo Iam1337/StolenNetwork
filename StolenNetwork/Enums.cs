@@ -422,4 +422,13 @@ namespace StolenNetwork
         /// </summary>
         NUMBER_OF_TYPES,
     }
+
+    public enum LogLevel
+    {
+        Debug,
+        Info,
+        Warning,
+        None
+    }
 }
+

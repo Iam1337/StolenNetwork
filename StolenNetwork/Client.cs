@@ -38,10 +38,6 @@ namespace StolenNetwork
 
 		#region Public Vars
 
-		public Action<string> OnLog;
-
-		public Action OnTickDrop;
-
 		public string Host { get; private set; }
 
 		public ushort Port { get; private set; }
@@ -50,7 +46,7 @@ namespace StolenNetwork
 
 		public IHandler CallbackHandler { get; }
 
-		public static string DisconnectReason { get; private set; }
+		public string DisconnectReason { get; private set; }
 
 		#endregion
 
@@ -58,7 +54,7 @@ namespace StolenNetwork
 
 		private Peer _peer;
 
-		private Stopwatch _tickTimer = Stopwatch.StartNew();
+		private readonly Stopwatch _tickTimer = Stopwatch.StartNew();
 
 		#endregion
 
@@ -73,7 +69,7 @@ namespace StolenNetwork
 		public virtual StartupResult Connect(string host, ushort port, uint timeout = 0)
 		{
 			if (_peer != null)
-				throw new Exception("[STOLEN CLIENT] Client is already running.");
+				throw new InvalidOperationException("Client is already running");
 
 			Host = host;
 			Port = port;
@@ -120,9 +116,6 @@ namespace StolenNetwork
 				var totalMilliseconds = _tickTimer.Elapsed.TotalMilliseconds;
 				if (totalMilliseconds > MaxReceiveTime || !IsConnected())
 				{
-					if (OnTickDrop != null)
-						OnTickDrop.Invoke();
-
 					break;
 				}
 			}
@@ -151,7 +144,7 @@ namespace StolenNetwork
 		protected void Disconnect(DisconnectType disconnectType, string reason, bool sendReason)
 		{
 			if (_peer == null)
-				throw new Exception("[STOLEN CLIENT] Client is not running.");
+				throw new InvalidOperationException("Client is not running.");
 
 			if (sendReason && Writer.Start((byte) StolenPacketType.DisconnectReason))
 			{
@@ -160,9 +153,6 @@ namespace StolenNetwork
 										   PacketReliability.ReliableUnordered,
 										   PacketPriority.Immediate));
 			}
-
-			if (OnLog != null)
-				OnLog.Invoke($"[STOLEN CLIENT] Client Disconnect: {reason}");
 
 			Writer.Dispose();
 			Writer = null;
@@ -176,8 +166,7 @@ namespace StolenNetwork
 
 			Peer.Destroy(ref _peer);
 
-			if (CallbackHandler != null)
-				CallbackHandler.ClientDisconnected(disconnectType, reason);
+			CallbackHandler?.ClientDisconnected(disconnectType, reason);
 		}
 
 		#endregion
@@ -195,12 +184,14 @@ namespace StolenNetwork
 
 			if (Connection == null)
 			{
-				throw new Exception($"[STOLEN CLIENT] Ignoring packet {packetId}. Client Connection is null.");
+				Logs.Warning($"Ignoring packet {packetId}. Client Connection is null");
+				return;
 			}
 
 			if (Connection.Guid != _peer.GetPacketGUID())
 			{
-				throw new Exception($"[STOLEN CLIENT]  Wrong ReceiveId {_peer.GetPacketGUID()}");
+				Logs.Warning($"Wrong ReceiveId {_peer.GetPacketGUID()}");
+				return;
 			}
 
 			if (ProcessStolenPacket(packetId, Reader))
@@ -211,12 +202,12 @@ namespace StolenNetwork
 
 			try
 			{
-				if (CallbackHandler != null)
-					CallbackHandler.PacketProcess(packet);
+				CallbackHandler?.PacketProcess(packet);
 			}
 			catch (Exception exception)
 			{
 				Disconnect(exception.Message + "\n" + exception.StackTrace, true);
+
 				throw;
 			}
 
@@ -231,16 +222,14 @@ namespace StolenNetwork
 			var packetType = (RakPacketType) packetId;
 			if (packetType == RakPacketType.SND_RECEIPT_ACKED)
 			{
-				if (CallbackHandler != null)
-					CallbackHandler.SendedPacketAcked(reader.UInt32());
+				CallbackHandler?.SendedPacketAcked(reader.UInt32());
 
 				return true;
 			}
 
 			if (packetType == RakPacketType.SND_RECEIPT_LOSS)
 			{
-				if (CallbackHandler != null)
-					CallbackHandler.SendedPacketLoss(reader.UInt32());
+				CallbackHandler?.SendedPacketLoss(reader.UInt32());
 
 				return true;
 			}
@@ -248,34 +237,41 @@ namespace StolenNetwork
 			if (packetType == RakPacketType.CONNECTION_REQUEST_ACCEPTED)
 			{
 				if (Connection.Guid != 0)
-					throw new Exception($"[STOLEN CLIENT] Multiple PacketType.CONNECTION_REQUEST_ACCEPTED.");
+				{
+					Logs.Warning("Multiple PacketType.CONNECTION_REQUEST_ACCEPTED");
+					return true;
+				}
 
 				Connection.Guid = _peer.GetPacketGUID();
 				Connection.IsConnected = true;
 				Connection.State = ConnectionState.Connecting;
 
-				if (CallbackHandler != null)
-					CallbackHandler.ClientConnecting();
+				CallbackHandler?.ClientConnecting();
 
 				return true;
 			}
 
 			if (packetType == RakPacketType.CONNECTION_ATTEMPT_FAILED)
 			{
-				Disconnect(DisconnectType.ConnectionFailed, "Connection Attempt Failed", false);
+				Disconnect(DisconnectType.ConnectionFailed, "Connection attempt failed", false);
+				Logs.Info("Disconnected: Connection attempt failed");
 				return true;
 			}
 
 			if (packetType == RakPacketType.NO_FREE_INCOMING_CONNECTIONS)
 			{
-				Disconnect(DisconnectType.FullServer, "Server is Full", false);
+				Disconnect(DisconnectType.FullServer, "Server is full", false);
+				Logs.Info("Disconnected: Server is full");
 				return true;
 			}
 
 			if (packetType == RakPacketType.DISCONNECTION_NOTIFICATION)
 			{
 				if (Connection == null || Connection.Guid == _peer.GetPacketGUID())
+				{
 					Disconnect(DisconnectType.CustomReason, DisconnectReason, false);
+					Logs.Info($"Disconnected: {DisconnectReason}");
+				}
 
 				return true;
 			}
@@ -283,7 +279,10 @@ namespace StolenNetwork
 			if (packetType == RakPacketType.CONNECTION_LOST)
 			{
 				if (Connection == null || Connection.Guid == _peer.GetPacketGUID())
-					Disconnect(DisconnectType.ConnectionLost, "Timed Out", false);
+				{
+					Disconnect(DisconnectType.ConnectionLost, "Timed out", false);
+					Logs.Info("Disconnected: Timed out");
+				}
 
 				return true;
 			}
@@ -291,14 +290,17 @@ namespace StolenNetwork
 			if (packetType == RakPacketType.CONNECTION_BANNED)
 			{
 				if (Connection == null || Connection.Guid == _peer.GetPacketGUID())
-					Disconnect(DisconnectType.ConnectionBanned, "Connection Banned", false);
+				{
+					Disconnect(DisconnectType.ConnectionBanned, "Connection banned", false);
+					Logs.Info("Disconnected: Connection banned");
+				}
 
 				return true;
 			}
 
 			if (Connection != null && Connection.Guid != _peer.GetPacketGUID())
 			{
-				throw new Exception($"[STOLEN CLIENT] Unhandled RakNet packet {packetId} from unknown source {_peer.GetPacketAddress()}");
+				Logs.Warning($"Unhandled RakNet packet {packetId} from unknown source {_peer.GetPacketAddress()}");
 			}
 
 			return true;
@@ -323,7 +325,7 @@ namespace StolenNetwork
 				}
 				else
 				{
-					throw new Exception("[STOLEN CLIENT] Cannot start Handshake message in Client.ProcessStolenPacket!");
+					throw new InvalidOperationException("Cannot start Handshake message in Client.ProcessStolenPacket");
 				}
 
 				return true;

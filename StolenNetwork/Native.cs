@@ -1,28 +1,78 @@
 ﻿/* Copyright (c) 2021 ExT (V.Sigalkin) */
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Security;
 using System.Runtime.InteropServices;
 
 namespace StolenNetwork
 {
 	// This part of project work with this CrabNet fork: https://github.com/iam1337/CrabNet
+	// Based on https://github.com/grpc/grpc/blob/master/src/csharp/Grpc.Core/
 
 	[SuppressUnmanagedCodeSecurity]
 	internal static class Native
 	{
 		#region Private Vars
 
-		private static readonly NativeBackend _b;
+		private static readonly NativeBackend _b = LoadNativeBackend();
 
 		#endregion
 
-		#region Contstructor
+		#region Public Methods
 
-		static Native()
-		{
-			_b = LoadNativeBackend();
-		}
+		// PEERS
+		public static IntPtr CreateInstance() => _b.CreateInstance();
+
+		public static void DestroyInstance(IntPtr peer) => _b.DestroyInstance(peer);
+
+
+		// SERVER
+		public static int SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections) => _b.SetupServer(peer, serverHost, serverPort, maxConnections);
+
+		public static void CloseConnection(IntPtr peer, ulong guid) => _b.CloseConnection(peer, guid);
+
+		// CLIENT
+		public static int SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout) => _b.SetupClient(peer, serverHost, serverPort, retries, retryDelay, timeout);
+
+
+		// RECEIVE
+		public static bool IsReceived(IntPtr peer) => _b.IsReceived(peer);
+
+		public static int GetPacketLength(IntPtr peer) => _b.GetPacketLength(peer);
+
+		public static ulong GetPacketGUID(IntPtr peer) => _b.GetPacketGUID(peer);
+
+		public static string GetPacketAddress(IntPtr peer) =>  IntPtrToString(_b.GetPacketAddressPtr(peer));
+
+		public static ushort GetPacketPort(IntPtr peer) => _b.GetPacketPort(peer);
+
+		public static unsafe bool ReadPacketBytes(IntPtr peer, byte* bytes) => _b.ReadPacketBytes(peer, bytes);
+
+		// SEND
+		public static void StartPacket(IntPtr peer) => _b.StartPacket(peer);
+
+		public static unsafe void WritePacketBytes(IntPtr peer, byte* bytes, uint size) => _b.WritePacketBytes(peer, bytes, size);
+
+		public static uint SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel) => _b.SendPacketUnicast(peer, guid, priority, reliability, channel);
+
+		public static uint SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel) => _b.SendPacketBroadcast(peer, priority, reliability, channel);
+
+
+		// SHARED
+		public static void GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics) => _b.GetStatistics(peer, guid, ref statistics);
+
+		public static string GetStatisticsString(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel) => IntPtrToString(_b.GetStatisticsStringPtr(peer, guid, verbosityLevel));
+
+		public static int GetAveragePing(IntPtr peer, ulong guid) => _b.GetAveragePing(peer, guid);
+
+		public static int GetLastPing(IntPtr peer, ulong guid) => _b.GetLastPing(peer, guid);
+
+		public static int GetLowestPing(IntPtr peer, ulong guid) => _b.GetLowestPing(peer, guid);
+
+		#endregion
+
+		#region Private Methods
 
 		private static NativeBackend LoadNativeBackend()
 		{
@@ -36,7 +86,7 @@ namespace StolenNetwork
 				return LoadXamarinBackend();
 			}
 
-			return LoadSingleFileAppBackend();
+			return LoadBackend();
 		}
 
 		private static NativeBackend LoadUnityBackend()
@@ -47,7 +97,6 @@ namespace StolenNetwork
 				//return new NativeBackend_StaticLib();
 			}
 
-			// most other platforms load unity plugins as a shared library
 			return new NativeBackend_SharedLib();
 		}
 
@@ -62,7 +111,7 @@ namespace StolenNetwork
 			//return new NativeBackend_StaticLib();
 		}
 
-		private static NativeBackend LoadSingleFileAppBackend()
+		private static NativeBackend LoadBackend()
 		{
 			if (PlatformApi.Architecture == Architecture.X64)
 			{
@@ -87,62 +136,10 @@ namespace StolenNetwork
 			throw new InvalidOperationException($"Unsupported architecture \"{PlatformApi.Architecture}\".");
 		}
 
-		#endregion
-
-		#region Externs
-
-		// PEERS
-		public static IntPtr PEER_CreateInstance() => _b._PEER_CreateInstance();
-
-		public static void PEER_DestroyInstance(IntPtr peer) => _b._PEER_DestroyInstance(peer);
-
-
-		// SERVER
-		public static int PEER_SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections) => _b._PEER_SetupServer(peer, serverHost, serverPort, maxConnections);
-
-		public static void PEER_CloseConnection(IntPtr peer, ulong guid) => _b._PEER_CloseConnection(peer, guid);
-
-
-		// CLIENT
-		public static int PEER_SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout) => _b._PEER_SetupClient(peer, serverHost, serverPort, retries, retryDelay, timeout);
-
-
-		// RECEIVE
-		public static bool PEER_Receive(IntPtr peer) => _b._PEER_Receive(peer);
-
-		public static int PACKET_GetLength(IntPtr peer) => _b._PACKET_GetLength(peer);
-
-		public static ulong PACKET_GetGUID(IntPtr peer) => _b._PACKET_GetGUID(peer);
-
-		public static string PACKET_GetAddress(IntPtr peer) => _b._PACKET_GetAddress(peer);
-
-		public static ushort PACKET_GetPort(IntPtr peer) => _b._PACKET_GetPort(peer);
-
-		public static unsafe bool PACKET_ReadBytes(IntPtr peer, byte* bytes) => _b._PACKET_ReadBytes(peer, bytes);
-
-		// SEND
-		public static void PACKET_StartPacket(IntPtr peer) => _b._PACKET_StartPacket(peer);
-
-		public static unsafe void PACKET_WriteBytes(IntPtr peer, byte* bytes, uint size) => _b._PACKET_WriteBytes(peer, bytes, size);
-
-		public static uint PACKET_SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel) => _b._PACKET_SendPacketUnicast(peer, guid, priority, reliability, channel);
-
-		public static uint PACKET_SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel) => _b._PACKET_SendPacketBroadcast(peer, priority, reliability, channel);
-
-
-		// SHARED
-		public static void PEER_GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics) => _b._PEER_GetStatistics(peer, guid, ref statistics);
-
-		public static string PEER_GetStatisticsString(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel) => _b._PEER_GetStatisticsString(peer, guid, verbosityLevel);
-
-		public static int PEER_GetAveragePing(IntPtr peer, ulong guid) => _b._PEER_GetAveragePing(peer, guid);
-
-		public static int PEER_GetLastPing(IntPtr peer, ulong guid) => _b._PEER_GetLastPing(peer, guid);
-
-		public static int PEER_GetLowestPing(IntPtr peer, ulong guid) => _b._PEER_GetLowestPing(peer, guid);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static string IntPtrToString(IntPtr pointer) => pointer == IntPtr.Zero ? string.Empty : Marshal.PtrToStringAnsi(pointer);
 
 		#endregion
-
 	}
 
 	#region RakNet Statistics
@@ -151,12 +148,12 @@ namespace StolenNetwork
 	public enum StatisticsMetric
 	{
 		/// <summary>
-		/// How many bytes per pushed via a call to PACKET_SendPacketUnicast or PACKET_SendPacketBroadcast.
+		/// How many bytes per pushed via a call to SendPacketUnicast or SendPacketBroadcast.
 		/// </summary>
 		USER_MESSAGE_BYTES_PUSHED,
 
 		/// <summary>
-		/// How many user message bytes were sent via a call to PACKET_SendPacketUnicast or PACKET_SendPacketBroadcast. This is less than or equal to USER_MESSAGE_BYTES_PUSHED.
+		/// How many user message bytes were sent via a call to SendPacketUnicast or SendPacketBroadcast. This is less than or equal to USER_MESSAGE_BYTES_PUSHED.
 		/// A message would be pushed, but not yet sent, due to congestion control
 		/// </summary>
 		USER_MESSAGE_BYTES_SENT,

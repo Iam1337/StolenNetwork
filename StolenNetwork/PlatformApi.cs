@@ -7,7 +7,9 @@ using System.Runtime.InteropServices;
 
 namespace StolenNetwork
 {
-    internal static class PlatformApi
+	// Based on https://github.com/grpc/grpc/blob/master/src/csharp/Grpc.Core/
+
+	internal static class PlatformApi
     {
         #region Private Vars
 

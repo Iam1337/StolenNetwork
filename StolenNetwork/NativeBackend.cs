@@ -7,73 +7,76 @@ using System.Runtime.CompilerServices;
 
 namespace StolenNetwork
 {
+	// This part of project work with this CrabNet fork: https://github.com/iam1337/CrabNet
+	// Based on https://github.com/grpc/grpc/blob/master/src/csharp/Grpc.Core/
+
 	internal abstract class NativeBackend
 	{
-		#region Methods
+		#region Public Methods
 
 		// PEERS
+		public abstract IntPtr CreateInstance();
 
-		public abstract IntPtr _PEER_CreateInstance();
-
-		public abstract void _PEER_DestroyInstance(IntPtr peer);
+		public abstract void DestroyInstance(IntPtr peer);
 
 
 		// SERVER
-		public abstract int _PEER_SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections);
+		public abstract int SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections);
 
-		public abstract void _PEER_CloseConnection(IntPtr peer, ulong guid);
+		public abstract void CloseConnection(IntPtr peer, ulong guid);
 
 
 		// CLIENT
-		public abstract int _PEER_SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout);
+		public abstract int SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout);
 
 
 		// RECEIVE
-		public abstract bool _PEER_Receive(IntPtr peer);
+		public abstract bool IsReceived(IntPtr peer);
 
-		public abstract int _PACKET_GetLength(IntPtr peer);
+		public abstract int GetPacketLength(IntPtr peer);
 
-		public abstract ulong _PACKET_GetGUID(IntPtr peer);
+		public abstract ulong GetPacketGUID(IntPtr peer);
 
-		public abstract IntPtr _PACKET_GetAddressPtr(IntPtr peer);
+		public abstract IntPtr GetPacketAddressPtr(IntPtr peer);
 
-		public string _PACKET_GetAddress(IntPtr peer) => IntPtrToString(_PACKET_GetAddressPtr(peer));
+		public abstract ushort GetPacketPort(IntPtr peer);
 
-		public abstract ushort _PACKET_GetPort(IntPtr peer);
-
-		public abstract unsafe bool _PACKET_ReadBytes(IntPtr peer, byte* bytes);
+		public abstract unsafe bool ReadPacketBytes(IntPtr peer, byte* bytes);
 
 
 		// SEND
-		public abstract void _PACKET_StartPacket(IntPtr peer);
+		public abstract void StartPacket(IntPtr peer);
 
-		public abstract unsafe void _PACKET_WriteBytes(IntPtr peer, byte* bytes, uint size);
+		public abstract unsafe void WritePacketBytes(IntPtr peer, byte* bytes, uint size);
 
-		public abstract uint _PACKET_SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel);
+		public abstract uint SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel);
 
-		public abstract uint _PACKET_SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel);
+		public abstract uint SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel);
 
 
 		// SHARED
-		public abstract void _PEER_GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics);
+		public abstract void GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics);
 
-		public abstract IntPtr _PEER_GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel);
+		public abstract IntPtr GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel);
 
-		public string _PEER_GetStatisticsString(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel) => IntPtrToString(_PEER_GetStatisticsStringPtr(peer, guid, verbosityLevel));
+		public abstract int GetAveragePing(IntPtr peer, ulong guid);
 
-		public abstract int _PEER_GetAveragePing(IntPtr peer, ulong guid);
+		public abstract int GetLastPing(IntPtr peer, ulong guid);
 
-		public abstract int _PEER_GetLastPing(IntPtr peer, ulong guid);
+		public abstract int GetLowestPing(IntPtr peer, ulong guid);
 
-		public abstract int _PEER_GetLowestPing(IntPtr peer, ulong guid);
+		#endregion
+
+		#region Protected Methods
+
+		protected NativeBackend()
+		{
+			Logs.Info($"Initiate {GetType().Name} ");
+		}
 
 		#endregion
 
 		#region Private Vars
-
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public string IntPtrToString(IntPtr pointer) => pointer == IntPtr.Zero ? string.Empty : Marshal.PtrToStringAnsi(pointer);
 
 
 		#endregion
@@ -83,124 +86,124 @@ namespace StolenNetwork
 	{
 		#region Private Vars
 
-		private const string _libName = "__Internal";
+		private const string kLibrary = "__Internal";
 
 		#endregion
 
 		#region Public Methods
 
-		public override IntPtr _PEER_CreateInstance() => PEER_CreateInstance();
+		public override IntPtr CreateInstance() => PEER_CreateInstance();
 
-		public override void _PEER_DestroyInstance(IntPtr peer) => PEER_DestroyInstance(peer);
+		public override void DestroyInstance(IntPtr peer) => PEER_DestroyInstance(peer);
 
-		public override int _PEER_SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections) => PEER_SetupServer(peer, serverHost, serverPort, maxConnections);
+		public override int SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections) => PEER_SetupServer(peer, serverHost, serverPort, maxConnections);
 
-		public override void _PEER_CloseConnection(IntPtr peer, ulong guid) => PEER_CloseConnection(peer, guid);
+		public override void CloseConnection(IntPtr peer, ulong guid) => PEER_CloseConnection(peer, guid);
 
-		public override int _PEER_SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout) => PEER_SetupClient(peer, serverHost, serverPort, retries, retryDelay, timeout);
+		public override int SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout) => PEER_SetupClient(peer, serverHost, serverPort, retries, retryDelay, timeout);
 
-		public override bool _PEER_Receive(IntPtr peer) => PEER_Receive(peer);
+		public override bool IsReceived(IntPtr peer) => PEER_Receive(peer);
 
-		public override int _PACKET_GetLength(IntPtr peer) => PACKET_GetLength(peer);
+		public override int GetPacketLength(IntPtr peer) => PACKET_GetLength(peer);
 
-		public override ulong _PACKET_GetGUID(IntPtr peer) => PACKET_GetGUID(peer);
+		public override ulong GetPacketGUID(IntPtr peer) => PACKET_GetGUID(peer);
 
-		public override IntPtr _PACKET_GetAddressPtr(IntPtr peer) => PACKET_GetAddressPtr(peer);
+		public override IntPtr GetPacketAddressPtr(IntPtr peer) => PACKET_GetAddressPtr(peer);
 
-		public override ushort _PACKET_GetPort(IntPtr peer) => PACKET_GetPort(peer);
+		public override ushort GetPacketPort(IntPtr peer) => PACKET_GetPort(peer);
 
-		public override unsafe bool _PACKET_ReadBytes(IntPtr peer, byte* bytes) => PACKET_ReadBytes(peer, bytes);
+		public override unsafe bool ReadPacketBytes(IntPtr peer, byte* bytes) => PACKET_ReadBytes(peer, bytes);
 
-		public override void _PACKET_StartPacket(IntPtr peer) => PACKET_StartPacket(peer);
+		public override void StartPacket(IntPtr peer) => PACKET_StartPacket(peer);
 
-		public override unsafe void _PACKET_WriteBytes(IntPtr peer, byte* bytes, uint size) => PACKET_WriteBytes(peer, bytes, size);
+		public override unsafe void WritePacketBytes(IntPtr peer, byte* bytes, uint size) => PACKET_WriteBytes(peer, bytes, size);
 
-		public override uint _PACKET_SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketUnicast(peer, guid, priority, reliability, channel);
+		public override uint SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketUnicast(peer, guid, priority, reliability, channel);
 
-		public override uint _PACKET_SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketBroadcast(peer, priority, reliability, channel);
+		public override uint SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketBroadcast(peer, priority, reliability, channel);
 
-		public override void _PEER_GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics) => PEER_GetStatistics(peer, guid, ref statistics);
+		public override void GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics) => PEER_GetStatistics(peer, guid, ref statistics);
 
-		public override IntPtr _PEER_GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel) => PEER_GetStatisticsStringPtr(peer, guid, verbosityLevel);
+		public override IntPtr GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel) => PEER_GetStatisticsStringPtr(peer, guid, verbosityLevel);
 
-		public override int _PEER_GetAveragePing(IntPtr peer, ulong guid) => PEER_GetAveragePing(peer, guid);
+		public override int GetAveragePing(IntPtr peer, ulong guid) => PEER_GetAveragePing(peer, guid);
 
-		public override int _PEER_GetLastPing(IntPtr peer, ulong guid) => PEER_GetLastPing(peer, guid);
+		public override int GetLastPing(IntPtr peer, ulong guid) => PEER_GetLastPing(peer, guid);
 
-		public override int _PEER_GetLowestPing(IntPtr peer, ulong guid) => PEER_GetLowestPing(peer, guid);
+		public override int GetLowestPing(IntPtr peer, ulong guid) => PEER_GetLowestPing(peer, guid);
 
 		#endregion
 
 		#region Import Methods
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern IntPtr PEER_CreateInstance();
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern void PEER_DestroyInstance(IntPtr peer);
 
 
 		// SERVER
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern void PEER_CloseConnection(IntPtr peer, ulong guid);
 
 
 		// CLIENT
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout);
 
 
 		// RECEIVE
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern bool PEER_Receive(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PACKET_GetLength(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern ulong PACKET_GetGUID(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern IntPtr PACKET_GetAddressPtr(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern ushort PACKET_GetPort(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern unsafe bool PACKET_ReadBytes(IntPtr peer, byte* bytes);
 
 
 		// SEND
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern void PACKET_StartPacket(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern unsafe void PACKET_WriteBytes(IntPtr peer, byte* bytes, uint size);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern uint PACKET_SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern uint PACKET_SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel);
 
 
 		// SHARED
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern void PEER_GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern IntPtr PEER_GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_GetAveragePing(IntPtr peer, ulong guid);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_GetLastPing(IntPtr peer, ulong guid);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_GetLowestPing(IntPtr peer, ulong guid);
 
 		#endregion
@@ -210,124 +213,124 @@ namespace StolenNetwork
 	{
 		#region Private Vars
 
-		private const string _libName = "RakNet";
+		private const string kLibrary = "RakNet";
 
 		#endregion
 
 		#region Public Methods
 
-		public override IntPtr _PEER_CreateInstance() => PEER_CreateInstance();
+		public override IntPtr CreateInstance() => PEER_CreateInstance();
 
-		public override void _PEER_DestroyInstance(IntPtr peer) => PEER_DestroyInstance(peer);
+		public override void DestroyInstance(IntPtr peer) => PEER_DestroyInstance(peer);
 
-		public override int _PEER_SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections) => PEER_SetupServer(peer, serverHost, serverPort, maxConnections);
+		public override int SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections) => PEER_SetupServer(peer, serverHost, serverPort, maxConnections);
 
-		public override void _PEER_CloseConnection(IntPtr peer, ulong guid) => PEER_CloseConnection(peer, guid);
+		public override void CloseConnection(IntPtr peer, ulong guid) => PEER_CloseConnection(peer, guid);
 
-		public override int _PEER_SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout) => PEER_SetupClient(peer, serverHost, serverPort, retries, retryDelay, timeout);
+		public override int SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout) => PEER_SetupClient(peer, serverHost, serverPort, retries, retryDelay, timeout);
 
-		public override bool _PEER_Receive(IntPtr peer) => PEER_Receive(peer);
+		public override bool IsReceived(IntPtr peer) => PEER_Receive(peer);
 
-		public override int _PACKET_GetLength(IntPtr peer) => PACKET_GetLength(peer);
+		public override int GetPacketLength(IntPtr peer) => PACKET_GetLength(peer);
 
-		public override ulong _PACKET_GetGUID(IntPtr peer) => PACKET_GetGUID(peer);
+		public override ulong GetPacketGUID(IntPtr peer) => PACKET_GetGUID(peer);
 
-		public override IntPtr _PACKET_GetAddressPtr(IntPtr peer) => PACKET_GetAddressPtr(peer);
+		public override IntPtr GetPacketAddressPtr(IntPtr peer) => PACKET_GetAddressPtr(peer);
 
-		public override ushort _PACKET_GetPort(IntPtr peer) => PACKET_GetPort(peer);
+		public override ushort GetPacketPort(IntPtr peer) => PACKET_GetPort(peer);
 
-		public override unsafe bool _PACKET_ReadBytes(IntPtr peer, byte* bytes) => PACKET_ReadBytes(peer, bytes);
+		public override unsafe bool ReadPacketBytes(IntPtr peer, byte* bytes) => PACKET_ReadBytes(peer, bytes);
 
-		public override void _PACKET_StartPacket(IntPtr peer) => PACKET_StartPacket(peer);
+		public override void StartPacket(IntPtr peer) => PACKET_StartPacket(peer);
 
-		public override unsafe void _PACKET_WriteBytes(IntPtr peer, byte* bytes, uint size) => PACKET_WriteBytes(peer, bytes, size);
+		public override unsafe void WritePacketBytes(IntPtr peer, byte* bytes, uint size) => PACKET_WriteBytes(peer, bytes, size);
 
-		public override uint _PACKET_SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketUnicast(peer, guid, priority, reliability, channel);
+		public override uint SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketUnicast(peer, guid, priority, reliability, channel);
 
-		public override uint _PACKET_SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketBroadcast(peer, priority, reliability, channel);
+		public override uint SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketBroadcast(peer, priority, reliability, channel);
 
-		public override void _PEER_GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics) => PEER_GetStatistics(peer, guid, ref statistics);
+		public override void GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics) => PEER_GetStatistics(peer, guid, ref statistics);
 
-		public override IntPtr _PEER_GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel) => PEER_GetStatisticsStringPtr(peer, guid, verbosityLevel);
+		public override IntPtr GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel) => PEER_GetStatisticsStringPtr(peer, guid, verbosityLevel);
 
-		public override int _PEER_GetAveragePing(IntPtr peer, ulong guid) => PEER_GetAveragePing(peer, guid);
+		public override int GetAveragePing(IntPtr peer, ulong guid) => PEER_GetAveragePing(peer, guid);
 
-		public override int _PEER_GetLastPing(IntPtr peer, ulong guid) => PEER_GetLastPing(peer, guid);
+		public override int GetLastPing(IntPtr peer, ulong guid) => PEER_GetLastPing(peer, guid);
 
-		public override int _PEER_GetLowestPing(IntPtr peer, ulong guid) => PEER_GetLowestPing(peer, guid);
+		public override int GetLowestPing(IntPtr peer, ulong guid) => PEER_GetLowestPing(peer, guid);
 
 		#endregion
 
 		#region Import Methods
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern IntPtr PEER_CreateInstance();
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern void PEER_DestroyInstance(IntPtr peer);
 
 
 		// SERVER
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern void PEER_CloseConnection(IntPtr peer, ulong guid);
 
 
 		// CLIENT
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout);
 
 
 		// RECEIVE
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern bool PEER_Receive(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PACKET_GetLength(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern ulong PACKET_GetGUID(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern IntPtr PACKET_GetAddressPtr(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern ushort PACKET_GetPort(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern unsafe bool PACKET_ReadBytes(IntPtr peer, byte* bytes);
 
 
 		// SEND
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern void PACKET_StartPacket(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern unsafe void PACKET_WriteBytes(IntPtr peer, byte* bytes, uint size);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern uint PACKET_SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern uint PACKET_SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel);
 
 
 		// SHARED
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern void PEER_GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern IntPtr PEER_GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_GetAveragePing(IntPtr peer, ulong guid);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_GetLastPing(IntPtr peer, ulong guid);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_GetLowestPing(IntPtr peer, ulong guid);
 
 		#endregion
@@ -337,124 +340,124 @@ namespace StolenNetwork
 	{
 		#region Private Vars
 
-		private const string _libName = "RakNet.x64";
+		private const string kLibrary = "RakNet.x64";
 
 		#endregion
 
 		#region Public Methods
 
-		public override IntPtr _PEER_CreateInstance() => PEER_CreateInstance();
+		public override IntPtr CreateInstance() => PEER_CreateInstance();
 
-		public override void _PEER_DestroyInstance(IntPtr peer) => PEER_DestroyInstance(peer);
+		public override void DestroyInstance(IntPtr peer) => PEER_DestroyInstance(peer);
 
-		public override int _PEER_SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections) => PEER_SetupServer(peer, serverHost, serverPort, maxConnections);
+		public override int SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections) => PEER_SetupServer(peer, serverHost, serverPort, maxConnections);
 
-		public override void _PEER_CloseConnection(IntPtr peer, ulong guid) => PEER_CloseConnection(peer, guid);
+		public override void CloseConnection(IntPtr peer, ulong guid) => PEER_CloseConnection(peer, guid);
 
-		public override int _PEER_SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout) => PEER_SetupClient(peer, serverHost, serverPort, retries, retryDelay, timeout);
+		public override int SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout) => PEER_SetupClient(peer, serverHost, serverPort, retries, retryDelay, timeout);
 
-		public override bool _PEER_Receive(IntPtr peer) => PEER_Receive(peer);
+		public override bool IsReceived(IntPtr peer) => PEER_Receive(peer);
 
-		public override int _PACKET_GetLength(IntPtr peer) => PACKET_GetLength(peer);
+		public override int GetPacketLength(IntPtr peer) => PACKET_GetLength(peer);
 
-		public override ulong _PACKET_GetGUID(IntPtr peer) => PACKET_GetGUID(peer);
+		public override ulong GetPacketGUID(IntPtr peer) => PACKET_GetGUID(peer);
 
-		public override IntPtr _PACKET_GetAddressPtr(IntPtr peer) => PACKET_GetAddressPtr(peer);
+		public override IntPtr GetPacketAddressPtr(IntPtr peer) => PACKET_GetAddressPtr(peer);
 
-		public override ushort _PACKET_GetPort(IntPtr peer) => PACKET_GetPort(peer);
+		public override ushort GetPacketPort(IntPtr peer) => PACKET_GetPort(peer);
 
-		public override unsafe bool _PACKET_ReadBytes(IntPtr peer, byte* bytes) => PACKET_ReadBytes(peer, bytes);
+		public override unsafe bool ReadPacketBytes(IntPtr peer, byte* bytes) => PACKET_ReadBytes(peer, bytes);
 
-		public override void _PACKET_StartPacket(IntPtr peer) => PACKET_StartPacket(peer);
+		public override void StartPacket(IntPtr peer) => PACKET_StartPacket(peer);
 
-		public override unsafe void _PACKET_WriteBytes(IntPtr peer, byte* bytes, uint size) => PACKET_WriteBytes(peer, bytes, size);
+		public override unsafe void WritePacketBytes(IntPtr peer, byte* bytes, uint size) => PACKET_WriteBytes(peer, bytes, size);
 
-		public override uint _PACKET_SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketUnicast(peer, guid, priority, reliability, channel);
+		public override uint SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketUnicast(peer, guid, priority, reliability, channel);
 
-		public override uint _PACKET_SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketBroadcast(peer, priority, reliability, channel);
+		public override uint SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketBroadcast(peer, priority, reliability, channel);
 
-		public override void _PEER_GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics) => PEER_GetStatistics(peer, guid, ref statistics);
+		public override void GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics) => PEER_GetStatistics(peer, guid, ref statistics);
 
-		public override IntPtr _PEER_GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel) => PEER_GetStatisticsStringPtr(peer, guid, verbosityLevel);
+		public override IntPtr GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel) => PEER_GetStatisticsStringPtr(peer, guid, verbosityLevel);
 
-		public override int _PEER_GetAveragePing(IntPtr peer, ulong guid) => PEER_GetAveragePing(peer, guid);
+		public override int GetAveragePing(IntPtr peer, ulong guid) => PEER_GetAveragePing(peer, guid);
 
-		public override int _PEER_GetLastPing(IntPtr peer, ulong guid) => PEER_GetLastPing(peer, guid);
+		public override int GetLastPing(IntPtr peer, ulong guid) => PEER_GetLastPing(peer, guid);
 
-		public override int _PEER_GetLowestPing(IntPtr peer, ulong guid) => PEER_GetLowestPing(peer, guid);
+		public override int GetLowestPing(IntPtr peer, ulong guid) => PEER_GetLowestPing(peer, guid);
 
 		#endregion
 
 		#region Import Methods
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern IntPtr PEER_CreateInstance();
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern void PEER_DestroyInstance(IntPtr peer);
 
 
 		// SERVER
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern void PEER_CloseConnection(IntPtr peer, ulong guid);
 
 
 		// CLIENT
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout);
 
 
 		// RECEIVE
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern bool PEER_Receive(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PACKET_GetLength(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern ulong PACKET_GetGUID(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern IntPtr PACKET_GetAddressPtr(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern ushort PACKET_GetPort(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern unsafe bool PACKET_ReadBytes(IntPtr peer, byte* bytes);
 
 
 		// SEND
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern void PACKET_StartPacket(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern unsafe void PACKET_WriteBytes(IntPtr peer, byte* bytes, uint size);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern uint PACKET_SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern uint PACKET_SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel);
 
 
 		// SHARED
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern void PEER_GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern IntPtr PEER_GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_GetAveragePing(IntPtr peer, ulong guid);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_GetLastPing(IntPtr peer, ulong guid);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_GetLowestPing(IntPtr peer, ulong guid);
 
 		#endregion
@@ -464,124 +467,124 @@ namespace StolenNetwork
 	{
 		#region Private Vars
 
-		private const string _libName = "RakNet.x86";
+		private const string kLibrary = "RakNet.x86";
 
 		#endregion
 
 		#region Public Methods
 
-		public override IntPtr _PEER_CreateInstance() => PEER_CreateInstance();
+		public override IntPtr CreateInstance() => PEER_CreateInstance();
 
-		public override void _PEER_DestroyInstance(IntPtr peer) => PEER_DestroyInstance(peer);
+		public override void DestroyInstance(IntPtr peer) => PEER_DestroyInstance(peer);
 
-		public override int _PEER_SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections) => PEER_SetupServer(peer, serverHost, serverPort, maxConnections);
+		public override int SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections) => PEER_SetupServer(peer, serverHost, serverPort, maxConnections);
 
-		public override void _PEER_CloseConnection(IntPtr peer, ulong guid) => PEER_CloseConnection(peer, guid);
+		public override void CloseConnection(IntPtr peer, ulong guid) => PEER_CloseConnection(peer, guid);
 
-		public override int _PEER_SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout) => PEER_SetupClient(peer, serverHost, serverPort, retries, retryDelay, timeout);
+		public override int SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout) => PEER_SetupClient(peer, serverHost, serverPort, retries, retryDelay, timeout);
 
-		public override bool _PEER_Receive(IntPtr peer) => PEER_Receive(peer);
+		public override bool IsReceived(IntPtr peer) => PEER_Receive(peer);
 
-		public override int _PACKET_GetLength(IntPtr peer) => PACKET_GetLength(peer);
+		public override int GetPacketLength(IntPtr peer) => PACKET_GetLength(peer);
 
-		public override ulong _PACKET_GetGUID(IntPtr peer) => PACKET_GetGUID(peer);
+		public override ulong GetPacketGUID(IntPtr peer) => PACKET_GetGUID(peer);
 
-		public override IntPtr _PACKET_GetAddressPtr(IntPtr peer) => PACKET_GetAddressPtr(peer);
+		public override IntPtr GetPacketAddressPtr(IntPtr peer) => PACKET_GetAddressPtr(peer);
 
-		public override ushort _PACKET_GetPort(IntPtr peer) => PACKET_GetPort(peer);
+		public override ushort GetPacketPort(IntPtr peer) => PACKET_GetPort(peer);
 
-		public override unsafe bool _PACKET_ReadBytes(IntPtr peer, byte* bytes) => PACKET_ReadBytes(peer, bytes);
+		public override unsafe bool ReadPacketBytes(IntPtr peer, byte* bytes) => PACKET_ReadBytes(peer, bytes);
 
-		public override void _PACKET_StartPacket(IntPtr peer) => PACKET_StartPacket(peer);
+		public override void StartPacket(IntPtr peer) => PACKET_StartPacket(peer);
 
-		public override unsafe void _PACKET_WriteBytes(IntPtr peer, byte* bytes, uint size) => PACKET_WriteBytes(peer, bytes, size);
+		public override unsafe void WritePacketBytes(IntPtr peer, byte* bytes, uint size) => PACKET_WriteBytes(peer, bytes, size);
 
-		public override uint _PACKET_SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketUnicast(peer, guid, priority, reliability, channel);
+		public override uint SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketUnicast(peer, guid, priority, reliability, channel);
 
-		public override uint _PACKET_SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketBroadcast(peer, priority, reliability, channel);
+		public override uint SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketBroadcast(peer, priority, reliability, channel);
 
-		public override void _PEER_GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics) => PEER_GetStatistics(peer, guid, ref statistics);
+		public override void GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics) => PEER_GetStatistics(peer, guid, ref statistics);
 
-		public override IntPtr _PEER_GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel) => PEER_GetStatisticsStringPtr(peer, guid, verbosityLevel);
+		public override IntPtr GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel) => PEER_GetStatisticsStringPtr(peer, guid, verbosityLevel);
 
-		public override int _PEER_GetAveragePing(IntPtr peer, ulong guid) => PEER_GetAveragePing(peer, guid);
+		public override int GetAveragePing(IntPtr peer, ulong guid) => PEER_GetAveragePing(peer, guid);
 
-		public override int _PEER_GetLastPing(IntPtr peer, ulong guid) => PEER_GetLastPing(peer, guid);
+		public override int GetLastPing(IntPtr peer, ulong guid) => PEER_GetLastPing(peer, guid);
 
-		public override int _PEER_GetLowestPing(IntPtr peer, ulong guid) => PEER_GetLowestPing(peer, guid);
+		public override int GetLowestPing(IntPtr peer, ulong guid) => PEER_GetLowestPing(peer, guid);
 
 		#endregion
 
 		#region Import Methods
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern IntPtr PEER_CreateInstance();
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern void PEER_DestroyInstance(IntPtr peer);
 
 
 		// SERVER
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern void PEER_CloseConnection(IntPtr peer, ulong guid);
 
 
 		// CLIENT
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout);
 
 
 		// RECEIVE
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern bool PEER_Receive(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PACKET_GetLength(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern ulong PACKET_GetGUID(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern IntPtr PACKET_GetAddressPtr(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern ushort PACKET_GetPort(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern unsafe bool PACKET_ReadBytes(IntPtr peer, byte* bytes);
 
 
 		// SEND
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern void PACKET_StartPacket(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern unsafe void PACKET_WriteBytes(IntPtr peer, byte* bytes, uint size);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern uint PACKET_SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern uint PACKET_SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel);
 
 
 		// SHARED
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern void PEER_GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern IntPtr PEER_GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_GetAveragePing(IntPtr peer, ulong guid);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_GetLastPing(IntPtr peer, ulong guid);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_GetLowestPing(IntPtr peer, ulong guid);
 
 		#endregion
@@ -591,124 +594,124 @@ namespace StolenNetwork
 	{
 		#region Private Vars
 
-		private const string _libName = "RakNet.x64.dll";
+		private const string kLibrary = "RakNet.x64.dll";
 
 		#endregion
 
 		#region Public Methods
 
-		public override IntPtr _PEER_CreateInstance() => PEER_CreateInstance();
+		public override IntPtr CreateInstance() => PEER_CreateInstance();
 
-		public override void _PEER_DestroyInstance(IntPtr peer) => PEER_DestroyInstance(peer);
+		public override void DestroyInstance(IntPtr peer) => PEER_DestroyInstance(peer);
 
-		public override int _PEER_SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections) => PEER_SetupServer(peer, serverHost, serverPort, maxConnections);
+		public override int SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections) => PEER_SetupServer(peer, serverHost, serverPort, maxConnections);
 
-		public override void _PEER_CloseConnection(IntPtr peer, ulong guid) => PEER_CloseConnection(peer, guid);
+		public override void CloseConnection(IntPtr peer, ulong guid) => PEER_CloseConnection(peer, guid);
 
-		public override int _PEER_SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout) => PEER_SetupClient(peer, serverHost, serverPort, retries, retryDelay, timeout);
+		public override int SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout) => PEER_SetupClient(peer, serverHost, serverPort, retries, retryDelay, timeout);
 
-		public override bool _PEER_Receive(IntPtr peer) => PEER_Receive(peer);
+		public override bool IsReceived(IntPtr peer) => PEER_Receive(peer);
 
-		public override int _PACKET_GetLength(IntPtr peer) => PACKET_GetLength(peer);
+		public override int GetPacketLength(IntPtr peer) => PACKET_GetLength(peer);
 
-		public override ulong _PACKET_GetGUID(IntPtr peer) => PACKET_GetGUID(peer);
+		public override ulong GetPacketGUID(IntPtr peer) => PACKET_GetGUID(peer);
 
-		public override IntPtr _PACKET_GetAddressPtr(IntPtr peer) => PACKET_GetAddressPtr(peer);
+		public override IntPtr GetPacketAddressPtr(IntPtr peer) => PACKET_GetAddressPtr(peer);
 
-		public override ushort _PACKET_GetPort(IntPtr peer) => PACKET_GetPort(peer);
+		public override ushort GetPacketPort(IntPtr peer) => PACKET_GetPort(peer);
 
-		public override unsafe bool _PACKET_ReadBytes(IntPtr peer, byte* bytes) => PACKET_ReadBytes(peer, bytes);
+		public override unsafe bool ReadPacketBytes(IntPtr peer, byte* bytes) => PACKET_ReadBytes(peer, bytes);
 
-		public override void _PACKET_StartPacket(IntPtr peer) => PACKET_StartPacket(peer);
+		public override void StartPacket(IntPtr peer) => PACKET_StartPacket(peer);
 
-		public override unsafe void _PACKET_WriteBytes(IntPtr peer, byte* bytes, uint size) => PACKET_WriteBytes(peer, bytes, size);
+		public override unsafe void WritePacketBytes(IntPtr peer, byte* bytes, uint size) => PACKET_WriteBytes(peer, bytes, size);
 
-		public override uint _PACKET_SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketUnicast(peer, guid, priority, reliability, channel);
+		public override uint SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketUnicast(peer, guid, priority, reliability, channel);
 
-		public override uint _PACKET_SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketBroadcast(peer, priority, reliability, channel);
+		public override uint SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketBroadcast(peer, priority, reliability, channel);
 
-		public override void _PEER_GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics) => PEER_GetStatistics(peer, guid, ref statistics);
+		public override void GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics) => PEER_GetStatistics(peer, guid, ref statistics);
 
-		public override IntPtr _PEER_GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel) => PEER_GetStatisticsStringPtr(peer, guid, verbosityLevel);
+		public override IntPtr GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel) => PEER_GetStatisticsStringPtr(peer, guid, verbosityLevel);
 
-		public override int _PEER_GetAveragePing(IntPtr peer, ulong guid) => PEER_GetAveragePing(peer, guid);
+		public override int GetAveragePing(IntPtr peer, ulong guid) => PEER_GetAveragePing(peer, guid);
 
-		public override int _PEER_GetLastPing(IntPtr peer, ulong guid) => PEER_GetLastPing(peer, guid);
+		public override int GetLastPing(IntPtr peer, ulong guid) => PEER_GetLastPing(peer, guid);
 
-		public override int _PEER_GetLowestPing(IntPtr peer, ulong guid) => PEER_GetLowestPing(peer, guid);
+		public override int GetLowestPing(IntPtr peer, ulong guid) => PEER_GetLowestPing(peer, guid);
 
 		#endregion
 
 		#region Import Methods
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern IntPtr PEER_CreateInstance();
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern void PEER_DestroyInstance(IntPtr peer);
 
 
 		// SERVER
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern void PEER_CloseConnection(IntPtr peer, ulong guid);
 
 
 		// CLIENT
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout);
 
 
 		// RECEIVE
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern bool PEER_Receive(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PACKET_GetLength(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern ulong PACKET_GetGUID(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern IntPtr PACKET_GetAddressPtr(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern ushort PACKET_GetPort(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern unsafe bool PACKET_ReadBytes(IntPtr peer, byte* bytes);
 
 
 		// SEND
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern void PACKET_StartPacket(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern unsafe void PACKET_WriteBytes(IntPtr peer, byte* bytes, uint size);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern uint PACKET_SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern uint PACKET_SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel);
 
 
 		// SHARED
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern void PEER_GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern IntPtr PEER_GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_GetAveragePing(IntPtr peer, ulong guid);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_GetLastPing(IntPtr peer, ulong guid);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_GetLowestPing(IntPtr peer, ulong guid);
 
 		#endregion
@@ -718,124 +721,124 @@ namespace StolenNetwork
 	{
 		#region Private Vars
 
-		private const string _libName = "RakNet.x86.dll";
+		private const string kLibrary = "RakNet.x86.dll";
 
 		#endregion
 
 		#region Public Methods
 
-		public override IntPtr _PEER_CreateInstance() => PEER_CreateInstance();
+		public override IntPtr CreateInstance() => PEER_CreateInstance();
 
-		public override void _PEER_DestroyInstance(IntPtr peer) => PEER_DestroyInstance(peer);
+		public override void DestroyInstance(IntPtr peer) => PEER_DestroyInstance(peer);
 
-		public override int _PEER_SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections) => PEER_SetupServer(peer, serverHost, serverPort, maxConnections);
+		public override int SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections) => PEER_SetupServer(peer, serverHost, serverPort, maxConnections);
 
-		public override void _PEER_CloseConnection(IntPtr peer, ulong guid) => PEER_CloseConnection(peer, guid);
+		public override void CloseConnection(IntPtr peer, ulong guid) => PEER_CloseConnection(peer, guid);
 
-		public override int _PEER_SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout) => PEER_SetupClient(peer, serverHost, serverPort, retries, retryDelay, timeout);
+		public override int SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout) => PEER_SetupClient(peer, serverHost, serverPort, retries, retryDelay, timeout);
 
-		public override bool _PEER_Receive(IntPtr peer) => PEER_Receive(peer);
+		public override bool IsReceived(IntPtr peer) => PEER_Receive(peer);
 
-		public override int _PACKET_GetLength(IntPtr peer) => PACKET_GetLength(peer);
+		public override int GetPacketLength(IntPtr peer) => PACKET_GetLength(peer);
 
-		public override ulong _PACKET_GetGUID(IntPtr peer) => PACKET_GetGUID(peer);
+		public override ulong GetPacketGUID(IntPtr peer) => PACKET_GetGUID(peer);
 
-		public override IntPtr _PACKET_GetAddressPtr(IntPtr peer) => PACKET_GetAddressPtr(peer);
+		public override IntPtr GetPacketAddressPtr(IntPtr peer) => PACKET_GetAddressPtr(peer);
 
-		public override ushort _PACKET_GetPort(IntPtr peer) => PACKET_GetPort(peer);
+		public override ushort GetPacketPort(IntPtr peer) => PACKET_GetPort(peer);
 
-		public override unsafe bool _PACKET_ReadBytes(IntPtr peer, byte* bytes) => PACKET_ReadBytes(peer, bytes);
+		public override unsafe bool ReadPacketBytes(IntPtr peer, byte* bytes) => PACKET_ReadBytes(peer, bytes);
 
-		public override void _PACKET_StartPacket(IntPtr peer) => PACKET_StartPacket(peer);
+		public override void StartPacket(IntPtr peer) => PACKET_StartPacket(peer);
 
-		public override unsafe void _PACKET_WriteBytes(IntPtr peer, byte* bytes, uint size) => PACKET_WriteBytes(peer, bytes, size);
+		public override unsafe void WritePacketBytes(IntPtr peer, byte* bytes, uint size) => PACKET_WriteBytes(peer, bytes, size);
 
-		public override uint _PACKET_SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketUnicast(peer, guid, priority, reliability, channel);
+		public override uint SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketUnicast(peer, guid, priority, reliability, channel);
 
-		public override uint _PACKET_SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketBroadcast(peer, priority, reliability, channel);
+		public override uint SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketBroadcast(peer, priority, reliability, channel);
 
-		public override void _PEER_GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics) => PEER_GetStatistics(peer, guid, ref statistics);
+		public override void GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics) => PEER_GetStatistics(peer, guid, ref statistics);
 
-		public override IntPtr _PEER_GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel) => PEER_GetStatisticsStringPtr(peer, guid, verbosityLevel);
+		public override IntPtr GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel) => PEER_GetStatisticsStringPtr(peer, guid, verbosityLevel);
 
-		public override int _PEER_GetAveragePing(IntPtr peer, ulong guid) => PEER_GetAveragePing(peer, guid);
+		public override int GetAveragePing(IntPtr peer, ulong guid) => PEER_GetAveragePing(peer, guid);
 
-		public override int _PEER_GetLastPing(IntPtr peer, ulong guid) => PEER_GetLastPing(peer, guid);
+		public override int GetLastPing(IntPtr peer, ulong guid) => PEER_GetLastPing(peer, guid);
 
-		public override int _PEER_GetLowestPing(IntPtr peer, ulong guid) => PEER_GetLowestPing(peer, guid);
+		public override int GetLowestPing(IntPtr peer, ulong guid) => PEER_GetLowestPing(peer, guid);
 
 		#endregion
 
 		#region Import Methods
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern IntPtr PEER_CreateInstance();
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern void PEER_DestroyInstance(IntPtr peer);
 
 
 		// SERVER
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern void PEER_CloseConnection(IntPtr peer, ulong guid);
 
 
 		// CLIENT
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout);
 
 
 		// RECEIVE
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern bool PEER_Receive(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PACKET_GetLength(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern ulong PACKET_GetGUID(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern IntPtr PACKET_GetAddressPtr(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern ushort PACKET_GetPort(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern unsafe bool PACKET_ReadBytes(IntPtr peer, byte* bytes);
 
 
 		// SEND
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern void PACKET_StartPacket(IntPtr peer);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern unsafe void PACKET_WriteBytes(IntPtr peer, byte* bytes, uint size);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern uint PACKET_SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern uint PACKET_SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel);
 
 
 		// SHARED
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern void PEER_GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern IntPtr PEER_GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_GetAveragePing(IntPtr peer, ulong guid);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_GetLastPing(IntPtr peer, ulong guid);
 
-		[DllImport(_libName)]
+		[DllImport(kLibrary)]
 		private static extern int PEER_GetLowestPing(IntPtr peer, ulong guid);
 
 		#endregion
@@ -1037,45 +1040,45 @@ namespace StolenNetwork
 			PEER_GetLowestPing = GetMethodDelegate<Delegates.PEER_GetLowestPing_delegate>();
 		}
 
-		public override IntPtr _PEER_CreateInstance() => PEER_CreateInstance();
+		public override IntPtr CreateInstance() => PEER_CreateInstance();
 
-		public override void _PEER_DestroyInstance(IntPtr peer) => PEER_DestroyInstance(peer);
+		public override void DestroyInstance(IntPtr peer) => PEER_DestroyInstance(peer);
 
-		public override int _PEER_SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections) => PEER_SetupServer(peer, serverHost, serverPort, maxConnections);
+		public override int SetupServer(IntPtr peer, string serverHost, ushort serverPort, ushort maxConnections) => PEER_SetupServer(peer, serverHost, serverPort, maxConnections);
 
-		public override void _PEER_CloseConnection(IntPtr peer, ulong guid) => PEER_CloseConnection(peer, guid);
+		public override void CloseConnection(IntPtr peer, ulong guid) => PEER_CloseConnection(peer, guid);
 
-		public override int _PEER_SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout) => PEER_SetupClient(peer, serverHost, serverPort, retries, retryDelay, timeout);
+		public override int SetupClient(IntPtr peer, string serverHost, ushort serverPort, uint retries, uint retryDelay, uint timeout) => PEER_SetupClient(peer, serverHost, serverPort, retries, retryDelay, timeout);
 
-		public override bool _PEER_Receive(IntPtr peer) => PEER_Receive(peer);
+		public override bool IsReceived(IntPtr peer) => PEER_Receive(peer);
 
-		public override int _PACKET_GetLength(IntPtr peer) => PACKET_GetLength(peer);
+		public override int GetPacketLength(IntPtr peer) => PACKET_GetLength(peer);
 
-		public override ulong _PACKET_GetGUID(IntPtr peer) => PACKET_GetGUID(peer);
+		public override ulong GetPacketGUID(IntPtr peer) => PACKET_GetGUID(peer);
 
-		public override IntPtr _PACKET_GetAddressPtr(IntPtr peer) => PACKET_GetAddressPtr(peer);
+		public override IntPtr GetPacketAddressPtr(IntPtr peer) => PACKET_GetAddressPtr(peer);
 
-		public override ushort _PACKET_GetPort(IntPtr peer) => PACKET_GetPort(peer);
+		public override ushort GetPacketPort(IntPtr peer) => PACKET_GetPort(peer);
 
-		public override unsafe bool _PACKET_ReadBytes(IntPtr peer, byte* bytes) => PACKET_ReadBytes(peer, bytes);
+		public override unsafe bool ReadPacketBytes(IntPtr peer, byte* bytes) => PACKET_ReadBytes(peer, bytes);
 
-		public override void _PACKET_StartPacket(IntPtr peer) => PACKET_StartPacket(peer);
+		public override void StartPacket(IntPtr peer) => PACKET_StartPacket(peer);
 
-		public override unsafe void _PACKET_WriteBytes(IntPtr peer, byte* bytes, uint size) => PACKET_WriteBytes(peer, bytes, size);
+		public override unsafe void WritePacketBytes(IntPtr peer, byte* bytes, uint size) => PACKET_WriteBytes(peer, bytes, size);
 
-		public override uint _PACKET_SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketUnicast(peer, guid, priority, reliability, channel);
+		public override uint SendPacketUnicast(IntPtr peer, ulong guid, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketUnicast(peer, guid, priority, reliability, channel);
 
-		public override uint _PACKET_SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketBroadcast(peer, priority, reliability, channel);
+		public override uint SendPacketBroadcast(IntPtr peer, PacketPriority priority, PacketReliability reliability, byte channel) => PACKET_SendPacketBroadcast(peer, priority, reliability, channel);
 
-		public override void _PEER_GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics) => PEER_GetStatistics(peer, guid, ref statistics);
+		public override void GetStatistics(IntPtr peer, ulong guid, ref RakNetStatistics statistics) => PEER_GetStatistics(peer, guid, ref statistics);
 
-		public override IntPtr _PEER_GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel) => PEER_GetStatisticsStringPtr(peer, guid, verbosityLevel);
+		public override IntPtr GetStatisticsStringPtr(IntPtr peer, ulong guid, VerbosityLevel verbosityLevel) => PEER_GetStatisticsStringPtr(peer, guid, verbosityLevel);
 
-		public override int _PEER_GetAveragePing(IntPtr peer, ulong guid) => PEER_GetAveragePing(peer, guid);
+		public override int GetAveragePing(IntPtr peer, ulong guid) => PEER_GetAveragePing(peer, guid);
 
-		public override int _PEER_GetLastPing(IntPtr peer, ulong guid) => PEER_GetLastPing(peer, guid);
+		public override int GetLastPing(IntPtr peer, ulong guid) => PEER_GetLastPing(peer, guid);
 
-		public override int _PEER_GetLowestPing(IntPtr peer, ulong guid) => PEER_GetLowestPing(peer, guid);
+		public override int GetLowestPing(IntPtr peer, ulong guid) => PEER_GetLowestPing(peer, guid);
 
 		#endregion
 

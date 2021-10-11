@@ -11,12 +11,12 @@ namespace StolenNetwork
 
 		public static StartupResult Server(string host, ushort port, ushort connectionsCount, out Peer peer)
 		{
-			var peerPointer = Native.PEER_CreateInstance();
-			var setupResult = Native.PEER_SetupServer(peerPointer, host, port, connectionsCount);
+			var peerPointer = Native.CreateInstance();
+			var setupResult = Native.SetupServer(peerPointer, host, port, connectionsCount);
 			if (setupResult != 0)
 			{
 				if (peerPointer != IntPtr.Zero)
-					Native.PEER_DestroyInstance(peerPointer);
+					Native.DestroyInstance(peerPointer);
 
 				peer = null;
 			}
@@ -30,12 +30,12 @@ namespace StolenNetwork
 
 		public static StartupResult Client(string host, ushort port, uint retries, uint retryDelay, uint timeout, out Peer peer)
 		{
-			var peerPointer = Native.PEER_CreateInstance();
-			var setupResult = Native.PEER_SetupClient(peerPointer, host, port, retries, retryDelay, timeout);
+			var peerPointer = Native.CreateInstance();
+			var setupResult = Native.SetupClient(peerPointer, host, port, retries, retryDelay, timeout);
 			if (setupResult != 100)
 			{
 				if (peerPointer != IntPtr.Zero)
-					Native.PEER_DestroyInstance(peerPointer);
+					Native.DestroyInstance(peerPointer);
 
 				peer = null;
 			}
@@ -54,7 +54,7 @@ namespace StolenNetwork
            
             if (peer._peerPointer != IntPtr.Zero)
             {
-                Native.PEER_DestroyInstance(peer._peerPointer);
+                Native.DestroyInstance(peer._peerPointer);
             }
 
             peer._peerPointer = IntPtr.Zero;
@@ -77,33 +77,33 @@ namespace StolenNetwork
         // SERVER
         public void CloseConnection(ulong guid)
         {
-	        Native.PEER_CloseConnection(_peerPointer, guid);
+	        Native.CloseConnection(_peerPointer, guid);
         }
 
         // RECEIVE
         public bool IsReceived()
         {
-            return Native.PEER_Receive(_peerPointer);
+            return Native.IsReceived(_peerPointer);
         }
 
         public int GetPacketLength()
         {
-            return Native.PACKET_GetLength(_peerPointer);
+            return Native.GetPacketLength(_peerPointer);
         }
 
         public ulong GetPacketGUID()
         {
-            return Native.PACKET_GetGUID(_peerPointer);
+            return Native.GetPacketGUID(_peerPointer);
         }
 
         public string GetPacketAddress()
         {
-            return Native.PACKET_GetAddress(_peerPointer);
+            return Native.GetPacketAddress(_peerPointer);
         }
 
         public ushort GetPacketPort()
         {
-            return Native.PACKET_GetPort(_peerPointer);
+            return Native.GetPacketPort(_peerPointer);
         }
 
         public unsafe bool ReadPacket(MemoryStream stream)
@@ -121,7 +121,7 @@ namespace StolenNetwork
 
             fixed (byte* bufferPointer = stream.GetBuffer())
             {
-                if (!Native.PACKET_ReadBytes(_peerPointer, bufferPointer))
+                if (!Native.ReadPacketBytes(_peerPointer, bufferPointer))
                 {
                     return false;
                 }
@@ -134,7 +134,7 @@ namespace StolenNetwork
         // SEND
         public void PacketStart()
         {
-	        Native.PACKET_StartPacket(_peerPointer);
+	        Native.StartPacket(_peerPointer);
         }
 
         public unsafe void PacketWrite(MemoryStream stream)
@@ -144,18 +144,18 @@ namespace StolenNetwork
 
             fixed (byte* pointer = stream.GetBuffer())
             {
-	            Native.PACKET_WriteBytes(_peerPointer, pointer, (uint)stream.Length);
+	            Native.WritePacketBytes(_peerPointer, pointer, (uint)stream.Length);
             }
         }
 
         public uint PacketBroadcast(PacketPriority priority, PacketReliability reliability, byte channel)
         {
-	        return Native.PACKET_SendPacketBroadcast(_peerPointer, priority, reliability, channel);
+	        return Native.SendPacketBroadcast(_peerPointer, priority, reliability, channel);
         }
 
         public uint PacketSend(ulong guid, PacketPriority priority, PacketReliability reliability, byte channel)
         {
-	        return Native.PACKET_SendPacketUnicast(_peerPointer, guid, priority, reliability, channel);
+	        return Native.SendPacketUnicast(_peerPointer, guid, priority, reliability, channel);
         }
 
         // SHARED
@@ -163,29 +163,29 @@ namespace StolenNetwork
         {
             var statistics = new RakNetStatistics();
 
-	        Native.PEER_GetStatistics(_peerPointer, 0, ref statistics);
+	        Native.GetStatistics(_peerPointer, 0, ref statistics);
 
             return statistics;
         }
 
         public string GetStatisticsString(ulong guid)
         {
-            return Native.PEER_GetStatisticsString(_peerPointer, guid, VerbosityLevel.High);
+            return Native.GetStatisticsString(_peerPointer, guid, VerbosityLevel.High);
         }
 
         public int GetConnectionAveragePing(ulong guid)
         {
-            return Native.PEER_GetAveragePing(_peerPointer, guid);
+            return Native.GetAveragePing(_peerPointer, guid);
         }
 
         public int GetConnectionLastPing(ulong guid)
         {
-            return Native.PEER_GetLastPing(_peerPointer, guid);
+            return Native.GetLastPing(_peerPointer, guid);
         }
 
         public int GetConnectionLowestPing(ulong guid)
         {
-            return Native.PEER_GetLowestPing(_peerPointer, guid);
+            return Native.GetLowestPing(_peerPointer, guid);
         }
 
         #endregion

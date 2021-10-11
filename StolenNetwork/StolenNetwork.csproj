@@ -23,7 +23,6 @@
     <Content Include="..\Prebuild\RakNet.x64.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>RakNet.x64.dll</Link>
-      <Pack>false</Pack>
     </Content>
 
     <Content Include="..\Prebuild\RakNet.x86.dll">
